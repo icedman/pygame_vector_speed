@@ -67,6 +67,13 @@ class Context:
         m = self.state.matrix
         v1 = Vector(x, y).transform(m)
         v2 = Vector(x2, y2).transform(m)
+
+        # add culling
+        if (v1.x < 0 and v2.x < 0) or (v1.y < 0 and v2.y < 0):
+            return
+        if (v1.x > 1280 and v2.x > 1280) or (v1.y > 800 and v2.y > 800):
+            return
+
         pygame.draw.line(
             self.surface, color, [v1.x, v1.y], [v2.x, v2.y], self.state.strokeWidth
         )

@@ -1,11 +1,30 @@
 from maths import *
 from track import *
+from generator import *
 import yaml
 
-f = TrackFeature()
-with open("./data/angle_1.yaml", mode="rt", encoding="utf-8") as file:
+g = TrackGenerator()
+with open("./data/sectors.yaml", mode="rt", encoding="utf-8") as file:
     yml = yaml.safe_load(file)
-    f.loadDefinition(yml)
+    g.loadDefinition(yml)
+
+sources = [
+    "./data/angle_1.yaml",
+    "./data/angle_2.yaml",
+    "./data/chicane_1.yaml",
+    "./data/chicane_2.yaml",
+    "./data/hairpin.yaml",
+    "./data/loop_1.yaml",
+    "./data/loop_2.yaml",
+]
+
+for src in sources:
+    with open(src, mode="rt", encoding="utf-8") as file:
+        yml = yaml.safe_load(file)
+        g.loadFeature(yml)
+
+#     yml = yaml.safe_load(file)
+#     f.loadDefinition(yml)
 
 #     segments = []
 #     prev = None
@@ -24,15 +43,15 @@ with open("./data/angle_1.yaml", mode="rt", encoding="utf-8") as file:
 #     for p in t.points:
 #         print(p)
 
-for t in f.segments:
-    t.compute()
+# for t in f.segments:
+#     t.compute()
 
-for t in f.segments:
-    t.computeTrackPoints()
+# for t in f.segments:
+#     t.computeTrackPoints()
 
-for t in f.segments:
-    for p in t.points:
-        print(p)
+# for t in f.segments:
+#     for p in t.points:
+#         print(p)
 
 
 # t = TrackSegment()

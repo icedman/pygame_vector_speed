@@ -5,16 +5,44 @@ from track import *
 
 import yaml
 
-f = TrackFeature()
-with open("./data/angle_1.yaml", mode="rt", encoding="utf-8") as file:
-    yml = yaml.safe_load(file)
-    f.loadDefinition(yml)
+track = Track()
+for i in range(0, 100):
+    track.addSector(
+        [
+            TrackSegment.randomArcSegment(),
+            TrackSegment.randomLineSegment(),
+            TrackSegment.randomArcSegment(),
+        ]
+    )
 
-for t in f.segments:
-    t.compute()
+# f = TrackFeature()
+# with open("./data/angle_1.yaml", mode="rt", encoding="utf-8") as file:
+#     yml = yaml.safe_load(file)
+#     f.loadDefinition(yml)
 
-for t in f.segments:
-    t.computeTrackPoints()
+
+# def generate_track():
+#     f.segments = [
+#         TrackSegment.randomArcSegment(),
+#         TrackSegment.randomLineSegment(),
+#         TrackSegment.randomArcSegment(),
+#     ]
+
+#     prev = None
+#     for t in f.segments:
+#         if prev != None:
+#             prev.nextSegment = t
+#             t.prevSegment = prev
+#         prev = t
+
+#     for t in f.segments:
+#         t.compute()
+
+#     for t in f.segments:
+#         t.computeTrackPoints()
+
+
+# generate_track()
 
 pygame.init()
 # size = [1600, 900]
@@ -27,6 +55,7 @@ trackKeys = [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]
 keys = {}
 released = {}
 
+current_sector = 0
 rot = 0
 last_tick = 0
 idx = 0
@@ -50,11 +79,12 @@ while not done:
         keys[k] = pressed[k]
 
     if pressed[pygame.K_UP]:
-        idx -= 1
+        idx -= 2
     if pressed[pygame.K_DOWN]:
-        idx += 1
+        idx += 2
+    # if released[pygame.K_LEFT]:
+    #     generate_track()
     
-
     gfx.clear("black")
     gfx.save()
     gfx.drawRect(0, 0, size[0], size[1], "red")
@@ -66,12 +96,21 @@ while not done:
     innerRail = []
     outerBorder = []
     innerBorder = []
-    for t in f.segments:
+    for t in track.segments:
         for i in range(0, len(t.points)):
             p = t.points[i]
             points.append([p.x, p.y])
 
-            tp = None if i >= len(t.trackPoints)-1 else t.trackPoints[i]
+            if len(points) - 1 == idx:
+                current_sector = t.sector
+
+            dx = t.sector - current_sector
+            dist = Sqr(dx * dx)
+
+            if dist > 2:
+                continue
+
+            tp = None if i >= len(t.trackPoints) - 1 else t.trackPoints[i]
             if tp != None:
                 outerTrack.append([tp.outerTrack.x, tp.outerTrack.y])
                 outerRail.append([tp.outerRail.x, tp.outerRail.y])
@@ -87,9 +126,9 @@ while not done:
     idx = (idx + len(points)) % len(points)
     l = points[idx]
     v = gfx.transform(Vector(l[0], l[1]))
-    gfx.translate(size[0]/2-v.x, size[1]/2-v.y)
+    gfx.translate(size[0] / 2 - v.x, size[1] / 2 - v.y)
 
-    gfx.drawPolygonPoints(points, "red", False)
+    # gfx.drawPolygonPoints(points, "red", False)
     gfx.drawPolygonPoints(outerTrack, "white", False)
     gfx.drawPolygonPoints(innerTrack, "yellow", False)
     gfx.drawPolygonPoints(outerRail, "white", False)
@@ -99,6 +138,5 @@ while not done:
     gfx.restore()
 
     pygame.display.flip()
-
 
     rot += 1

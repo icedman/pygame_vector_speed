@@ -9,6 +9,7 @@ class TrackSegmentType(Enum):
     START = 3
     FINISH = 4
 
+
 class TrackPoint:
     index = 0
     point = Vector.identity()
@@ -22,6 +23,7 @@ class TrackPoint:
     innerBorder = Vector.identity()
     sideDir = Vector.identity()
     carDir = Vector.identity()
+
 
 class TrackSegment:
     _rotateLeft = Matrix.identity().rotate(0, 90, 180 * 3.14 / 180)
@@ -72,6 +74,54 @@ class TrackSegment:
         _.trackWidth = t.trackWidth
         _.splitWidth = t.splitWidth
         return t
+
+    @staticmethod
+    def randomLineSegment():
+        _ = TrackSegment()
+        _.segmentType = TrackSegmentType.STRAIGHT
+        width = 0.5 + Rnd(0, 2)
+        innerRail = 0.35 + Rnd(0, 0.5)
+        outerRail = 0.35 + Rnd(0, 0.5)
+
+        if (Rand(0, 100) % 4) != 0:
+            innerRail = outerRail
+
+        _.trackWidth = width
+        _.innerRail = innerRail
+        _.outerRail = outerRail
+        _.length = 2 + Rnd(0, 16)
+
+        if _.length >= 4 and (Rand(0, 1000) % 100) < 30:
+            _.splitWidth = 0.15 + Rnd(0, 0.35)
+
+        # split disabled
+        if _.sector < 4:
+            _.splitWidth = 0
+
+        return _
+
+    @staticmethod
+    def randomArcSegment():
+        _ = TrackSegment.randomLineSegment()
+        arc = 25 + Rnd(0, (360 - 25 - 60))
+        if arc > 100:
+            arc = arc / 2
+
+        radius = 0.05 + Rnd(0, 0.5)
+        _.arc = Floor(arc)
+        _.startRadius = radius
+        _.endRadius = radius
+        _.segmentType = TrackSegmentType.ARC_LEFT
+        if RndOr(0, 1) == 0:
+            _.segmentType = TrackSegmentType.ARC_RIGHT
+
+        if _.arc > 120:
+            _.arc -= Floor(Rnd(0, 80))
+
+        if _.arc > 100:
+            _.arc = Floor(_.arc / 2)
+
+        return _
 
     # move to mathss
     # def calculateAngle(self, f, t):
@@ -253,8 +303,8 @@ class TrackSegment:
         for i in range(0, len(_.points)):
             p = _.points[i]
             np = None
-            if i < len(_.points)-1:
-                np = _.points[i+1]
+            if i < len(_.points) - 1:
+                np = _.points[i + 1]
             elif _.nextSegment != None:
                 np = _.nextSegment.points[0]
             else:
@@ -262,7 +312,7 @@ class TrackSegment:
             d = Vector.copy(np).subtract(p)
             d.normalize()
 
-            sideDir = Vector(0,0,1).cross(d)
+            sideDir = Vector(0, 0, 1).cross(d)
             sideDir.normalize()
             trackWidth = Vector.copy(sideDir).scale(tw2)
             railWidth = Vector.copy(sideDir).scale(tw2 * 0.5)
@@ -305,8 +355,45 @@ class TrackFeature:
             _.segments.append(t)
 
 
+class Track:
+    segments = []
 
-# class RaceTrack:
-#     segments: []
-#     points: []
+    def __init__(self):
+        self.segments = []
+        return
 
+    def addSector(self, segments):
+        sector = 0
+        count = len(self.segments)
+        lastSegment = None
+        lastIdx = 0
+        if count > 0:
+            lastIdx = count - 1
+            lastSegment = self.segments[lastIdx]
+            sector = lastSegment.sector + 1
+
+        prev = lastSegment
+        for s in segments:
+            s.sector = sector
+            if prev != None:
+                prev.nextSegment = s
+                s.prevSegment = prev
+                
+                # smoothen width transition
+                s.trackWidth += prev.trackWidth * 2
+                s.trackWidth /= 3
+
+            prev = s
+            self.segments.append(s)
+
+        lastIdx -= 1
+        if lastIdx < 0:
+            lastIdx = 0
+
+        for i in range(lastIdx, len(self.segments)):
+            s = self.segments[i]
+            s.compute()
+
+        for i in range(lastIdx, len(self.segments)):
+            s = self.segments[i]
+            s.computeTrackPoints()

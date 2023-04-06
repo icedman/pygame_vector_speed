@@ -10,8 +10,11 @@ def Rand(s, e):
     return random.randint(s, e)
 
 
-def Rnd(s, e):
-    r = random.random() * (e - s)
+def Rnd(s=0, e=0):
+    l = e - s
+    if l == 0:
+        l = 1
+    r = random.random() * l
     return s + r
 
 
@@ -294,15 +297,14 @@ class Vector:
         self.z = self.z / l
         return self
 
-
-    def dot(self,vb):
-        return ( vb.x * self.x ) + ( vb.y * self.y ) + ( vb.z * self.z )
+    def dot(self, vb):
+        return (vb.x * self.x) + (vb.y * self.y) + (vb.z * self.z)
 
     def cross(self, vb):
         vr = Vector.identity()
-        vr.x = ( self.y * vb.z ) - ( self.z * vb.y )
-        vr.y = ( self.z * vb.x ) - ( self.x * vb.z )
-        vr.z = ( self.x * vb.y ) - ( self.y * vb.x )
+        vr.x = (self.y * vb.z) - (self.z * vb.y)
+        vr.y = (self.z * vb.x) - (self.x * vb.z)
+        vr.z = (self.x * vb.y) - (self.y * vb.x)
         return vr
 
     def length(self):

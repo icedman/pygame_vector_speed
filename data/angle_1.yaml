@@ -1,0 +1,55 @@
+track: chicane_1
+startAngle: 0
+
+segments:
+  - segment: 0
+    length: 10
+    arc: 0
+    startRadius: 0
+    endRadius: 0
+    innerRail: 0.5
+    outerRail: 0.5
+    trackWidth: 2
+    splitWidth: 0
+
+  - segment: 1
+    length: 0
+    arc: 90
+    startRadius: 0.05
+    endRadius: 0.05
+    innerRail: 0.5
+    outerRail: 0.8
+    trackWidth: 2
+    splitWidth: 0
+
+  - segment: 0
+    length: 10
+    arc: 0
+    startRadius: 0
+    endRadius: 0
+    innerRail: 0.5
+    outerRail: 0.5
+    trackWidth: 2
+    splitWidth: 0
+
+  - segment: 2
+    length: 0
+    arc: 90
+    startRadius: 0.05
+    endRadius: 0.05
+    innerRail: 0.8
+    outerRail: 0.5
+    trackWidth: 2
+    splitWidth: 0
+
+  - segment: 0
+    length: 10
+    arc: 0
+    startRadius: 0
+    endRadius: 0
+    innerRail: 0.5
+    outerRail: 0.5
+    trackWidth: 2
+    splitWidth: 0
+
+    

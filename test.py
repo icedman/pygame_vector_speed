@@ -3,25 +3,32 @@ from track import *
 from generator import *
 import yaml
 
-g = TrackGenerator()
-with open("./data/sectors.yaml", mode="rt", encoding="utf-8") as file:
-    yml = yaml.safe_load(file)
-    g.loadDefinition(yml)
+from data.angle_1 import *
+from data.angle_2 import *
+from data.chicane_1 import *
+from data.chicane_2 import *
+from data.hairpin import *
+from data.loop_1 import *
+from data.loop_2 import *
 
+with open("./data/sources/ships.yaml", mode="rt", encoding="utf-8") as file:
+    yml = yaml.safe_load(file)
+    print(yml)
+
+g = TrackGenerator()
 sources = [
-    "./data/angle_1.yaml",
-    "./data/angle_2.yaml",
-    "./data/chicane_1.yaml",
-    "./data/chicane_2.yaml",
-    "./data/hairpin.yaml",
-    "./data/loop_1.yaml",
-    "./data/loop_2.yaml",
+    angle_1,
+    angle_2,
+    chicane_1,
+    chicane_2,
+    hairpin,
+    loop_1,
+    loop_2,
 ]
 
+f = None
 for src in sources:
-    with open(src, mode="rt", encoding="utf-8") as file:
-        yml = yaml.safe_load(file)
-        g.loadFeature(yml)
+    f = g.loadFeature(src)
 
 #     yml = yaml.safe_load(file)
 #     f.loadDefinition(yml)

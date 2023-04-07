@@ -2,10 +2,11 @@ from maths import *
 from track import *
 
 
-class TrackGenerator:
+class TrackGenerator(Track):
     defs = {}
 
     def __init__(self):
+        Track.__init__(self)
         return
 
     def loadDefinition(self, yml):
@@ -19,3 +20,4 @@ class TrackGenerator:
         if not featureType in self.defs:
             self.defs[featureType] = []
         self.defs[featureType].append(f)
+        return f

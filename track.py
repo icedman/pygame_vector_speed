@@ -26,13 +26,11 @@ class TrackPoint:
 
 
 class TrackSegment:
-    _rotateLeft = Matrix.identity().rotate(0, 90, 180 * 3.14 / 180)
-    _rotateRight = Matrix.identity().rotate(0, 270, 180 * 3.14 / 180)
-
     position = Vector.identity()
 
     precision = 0.5
 
+    points = []
     trackPoints = []
     railType = 0
     trackColor = 0
@@ -59,8 +57,6 @@ class TrackSegment:
     prevSegment = None
     nextSegment = None
 
-    points = []
-
     @staticmethod
     def copy(t):
         _ = TrackSegment()
@@ -73,7 +69,22 @@ class TrackSegment:
         _.innerRail = t.innerRail
         _.trackWidth = t.trackWidth
         _.splitWidth = t.splitWidth
+        # _.points = []
+        # _.position = Vector.identity()
+        # _.endPoint = Vector.identity()
         return t
+
+    def loadDefinition(self, yml):
+        _ = self
+        _.segmentType = TrackSegmentType(yml["segment"])
+        _.arc = yml["arc"]
+        _.length = yml["length"]
+        _.startRadius = yml["startRadius"]
+        _.endRadius = yml["endRadius"]
+        _.outerRail = yml["outerRail"]
+        _.innerRail = yml["innerRail"]
+        _.trackWidth = yml["trackWidth"]
+        _.splitWidth = yml["splitWidth"]
 
     @staticmethod
     def randomLineSegment():
@@ -123,17 +134,12 @@ class TrackSegment:
 
         return _
 
-    # move to mathss
-    # def calculateAngle(self, f, t):
-    #     right = Vector.right()
-    #     angle = f.angleTo(t)
-    #     return 360 - angle if (right.angleTo(to)) > 90 else angle
-
     def compute(self):
         _ = self
+        _.points = []
         if _.prevSegment:
             _.baseAngle = _.prevSegment.endAngle
-            _.position = _.prevSegment.endPoint
+            _.position = Vector.copy(_.prevSegment.endPoint)
 
         if (
             _.segmentType == TrackSegmentType.STRAIGHT
@@ -152,9 +158,6 @@ class TrackSegment:
         if _.segmentType == TrackSegmentType.FINISH:
             _.splitWidth = 0
             _.computeEnd()
-
-        if _.nextSegment != None:
-            _.nextSegment.baseAngle = _.endAngle
 
     def computeStraight(self, length=None):
         _ = self
@@ -280,31 +283,57 @@ class TrackSegment:
 
         _.points.append(Vector.copy(end))
 
-    def loadDefinition(self, yml):
-        _ = self
-        _.segmentType = TrackSegmentType(yml["segment"])
-        _.arc = yml["arc"]
-        _.length = yml["length"]
-        _.startRadius = yml["startRadius"]
-        _.endRadius = yml["endRadius"]
-        _.outerRail = yml["outerRail"]
-        _.innerRail = yml["innerRail"]
-        _.trackWidth = yml["trackWidth"]
-        _.splitWidth = yml["splitWidth"]
+    @staticmethod
+    def _smoothenVectors(points, pre, count=1):
+        for c in range(0, count):
+            for i in range(0, len(points) - 2):
+                p1 = points[i]
+                p2 = points[i + 1]
+                p3 = points[i + 2]
+                v1 = Vector.copy(p2).subtract(p1)
+                v1.normalize().scale(pre).add(p1)
+                v2 = Vector.copy(p2).subtract(p3)
+                v2.normalize().scale(pre).add(p3)
+                v3 = v1.add(v2).scale(0.5)
+                points[i + 1] = v3
 
     def computeTrackPoints(self):
         _ = self
         _.trackPoints = []
 
         tw = _.trackWidth
+        mtw = tw if tw < 1 else 1
+        rw = mtw * 0.5
+        bw = mtw * 0.1
         sw = _.splitWidth
         tw2 = tw / 2
+        rw2 = rw / 2
+        bw2 = bw / 2
 
+        pre = _.precision + 0.2
+
+        # precision correction
+        pp = []
+        prev = None
         for i in range(0, len(_.points)):
             p = _.points[i]
+            if prev != None:
+                dist = p.distanceTo(prev)
+                if dist < pre:
+                    continue
+            prev = p
+            pp.append(p)
+
+        _.points = pp
+
+        # smoothen distances
+        TrackSegment._smoothenVectors(_.points, pre, 4)
+
+        for i in range(0, len(_.points)):
+            p = Vector.copy(_.points[i])
             np = None
             if i < len(_.points) - 1:
-                np = _.points[i + 1]
+                np = Vector.copy(_.points[i + 1])
             elif _.nextSegment != None:
                 np = _.nextSegment.points[0]
             else:
@@ -315,8 +344,8 @@ class TrackSegment:
             sideDir = Vector(0, 0, 1).cross(d)
             sideDir.normalize()
             trackWidth = Vector.copy(sideDir).scale(tw2)
-            railWidth = Vector.copy(sideDir).scale(tw2 * 0.5)
-            borderWidth = Vector.copy(sideDir).scale(tw2 * 0.1)
+            railWidth = Vector.copy(sideDir).scale(rw2)
+            borderWidth = Vector.copy(sideDir).scale(bw2)
 
             t = TrackPoint()
             t.outerTrack = Vector.copy(p).add(trackWidth)
@@ -327,7 +356,6 @@ class TrackSegment:
             t.innerBorder = Vector.copy(t.innerRail).subtract(borderWidth)
             t.point = Vector.copy(p)
             _.trackPoints.append(t)
-        return
 
 
 class TrackFeature:
@@ -335,24 +363,25 @@ class TrackFeature:
     name = ""
     startAngle = 0
 
+    defs = None
+
     def __init__(self):
         self.segments = []
 
     def loadDefinition(self, yml):
         _ = self
+        _.defs = yml
         _.name = yml["track"]
         _.startAngle = yml["startAngle"]
-
         _.segments = []
-        prev = None
         for s in yml["segments"]:
             t = TrackSegment()
             t.loadDefinition(s)
-            t.prevSegment = prev
-            if prev != None:
-                prev.nextSegment = t
-            prev = t
             _.segments.append(t)
+
+    def copySegments(self):
+        self.loadDefinition(self.defs)
+        return self.segments
 
 
 class Track:
@@ -373,15 +402,17 @@ class Track:
             sector = lastSegment.sector + 1
 
         prev = lastSegment
-        for s in segments:
+        for ss in segments:
+            s = TrackSegment.copy(ss)
             s.sector = sector
             if prev != None:
                 prev.nextSegment = s
                 s.prevSegment = prev
-                
+
                 # smoothen width transition
-                s.trackWidth += prev.trackWidth * 2
-                s.trackWidth /= 3
+                w = 1
+                s.trackWidth += prev.trackWidth * w
+                s.trackWidth /= w + 1
 
             prev = s
             self.segments.append(s)
@@ -390,10 +421,21 @@ class Track:
         if lastIdx < 0:
             lastIdx = 0
 
-        for i in range(lastIdx, len(self.segments)):
+        self.compute(lastIdx)
+
+    def compute(self, startIdx=0):
+        prev = None
+        for i in range(startIdx, len(self.segments)):
+            s = self.segments[i]
+            if prev != None:
+                prev.nextSegment = s
+                s.prevSegment = prev
+            prev = s
+
+        for i in range(startIdx, len(self.segments)):
             s = self.segments[i]
             s.compute()
 
-        for i in range(lastIdx, len(self.segments)):
+        for i in range(startIdx, len(self.segments)):
             s = self.segments[i]
             s.computeTrackPoints()

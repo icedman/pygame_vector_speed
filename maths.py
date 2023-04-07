@@ -257,6 +257,8 @@ class Vector:
         self.M[2] = z * 1
 
     def transform(self, m: Matrix):
+        self.x += 0.001
+        self.y += 0.001
         r = Vector.identity()
         for col in range(0, 3):
             sum = 0
@@ -315,6 +317,12 @@ class Vector:
 
     def angleTo(self, v):
         return angleTo(self.x, self.y, v.x, v.y)
+
+    def angleTo360(self, t):
+        f = self
+        right = Vector.right()
+        angle = f.angleTo(t)
+        return 360 - angle if (right.angleTo(to)) > 90 else angle
 
     def distanceTo(self, v):
         vc = Vector.copy(v)

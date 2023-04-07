@@ -3,10 +3,21 @@ from maths import *
 from draw import Context
 from track import *
 
-import yaml
+from data.angle_1 import *
+from data.ships import *
+
+feature = TrackFeature()
+feature.loadDefinition(angle_1)
+
+ship = ships["objects"][2]["shapes"]
 
 track = Track()
-for i in range(0, 100):
+
+
+for i in range(0, 4):
+    # track.addSector(feature.copySegments())
+    track.addSector(feature.copySegments())
+    # track.compute()
     track.addSector(
         [
             TrackSegment.randomArcSegment(),
@@ -14,35 +25,7 @@ for i in range(0, 100):
             TrackSegment.randomArcSegment(),
         ]
     )
-
-# f = TrackFeature()
-# with open("./data/angle_1.yaml", mode="rt", encoding="utf-8") as file:
-#     yml = yaml.safe_load(file)
-#     f.loadDefinition(yml)
-
-
-# def generate_track():
-#     f.segments = [
-#         TrackSegment.randomArcSegment(),
-#         TrackSegment.randomLineSegment(),
-#         TrackSegment.randomArcSegment(),
-#     ]
-
-#     prev = None
-#     for t in f.segments:
-#         if prev != None:
-#             prev.nextSegment = t
-#             t.prevSegment = prev
-#         prev = t
-
-#     for t in f.segments:
-#         t.compute()
-
-#     for t in f.segments:
-#         t.computeTrackPoints()
-
-
-# generate_track()
+    track.addSector(feature.copySegments())
 
 pygame.init()
 # size = [1600, 900]
@@ -50,6 +33,19 @@ size = [1280, 800]
 screen = pygame.display.set_mode(size)
 done = False
 gfx = Context(screen)
+
+
+def cull(v1, v2):
+    w = size[0]
+    h = size[1]
+    if (v1.x < 0 and v2.x < 0) or (v1.y < 0 and v2.y < 0):
+        return True
+    if (v1.x > w and v2.x > w) or (v1.y > h and v2.y > h):
+        return True
+    return False
+
+
+gfx.cull = cull
 
 trackKeys = [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]
 keys = {}
@@ -79,12 +75,10 @@ while not done:
         keys[k] = pressed[k]
 
     if pressed[pygame.K_UP]:
-        idx -= 2
+        idx -= 1
     if pressed[pygame.K_DOWN]:
-        idx += 2
-    # if released[pygame.K_LEFT]:
-    #     generate_track()
-    
+        idx += 1
+
     gfx.clear("black")
     gfx.save()
     gfx.drawRect(0, 0, size[0], size[1], "red")
@@ -106,8 +100,7 @@ while not done:
 
             dx = t.sector - current_sector
             dist = Sqr(dx * dx)
-
-            if dist > 2:
+            if dist > 1:
                 continue
 
             tp = None if i >= len(t.trackPoints) - 1 else t.trackPoints[i]
@@ -119,22 +112,37 @@ while not done:
                 innerRail.append([tp.innerRail.x, tp.innerRail.y])
                 innerBorder.append([tp.innerBorder.x, tp.innerBorder.y])
 
-    scale = 50
+    scale = 40
     gfx.scale(scale, scale)
-    # gfx.rotate(rot)
 
     idx = (idx + len(points)) % len(points)
     l = points[idx]
     v = gfx.transform(Vector(l[0], l[1]))
     gfx.translate(size[0] / 2 - v.x, size[1] / 2 - v.y)
 
-    # gfx.drawPolygonPoints(points, "red", False)
+    for i in range(0, len(outerTrack) - 1):
+        p1 = outerTrack[i]
+        p2 = innerTrack[i]
+        # gfx.drawLine(p1[0], p1[1], p2[0], p2[1], "red")
+
+    for i in range(0, len(outerTrack) - 1):
+        p1 = outerTrack[i]
+        p2 = outerRail[i + 1]
+        # gfx.drawLine(p1[0], p1[1], p2[0], p2[1], "red")
+        p1 = innerTrack[i]
+        p2 = innerRail[i + 1]
+        # gfx.drawLine(p1[0], p1[1], p2[0], p2[1], "red")
+
+    gfx.drawPolygonPoints(points, "red", False)
     gfx.drawPolygonPoints(outerTrack, "white", False)
     gfx.drawPolygonPoints(innerTrack, "yellow", False)
     gfx.drawPolygonPoints(outerRail, "white", False)
     gfx.drawPolygonPoints(innerRail, "yellow", False)
     gfx.drawPolygonPoints(outerBorder, "magenta", False)
     gfx.drawPolygonPoints(innerBorder, "magenta", False)
+
+    gfx.drawShape(ship, l[0], l[1], 0.2, 0, "red")
+
     gfx.restore()
 
     pygame.display.flip()

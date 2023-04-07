@@ -22,7 +22,10 @@ class TrackPoint:
     outerBorder = Vector.identity()
     innerBorder = Vector.identity()
     sideDir = Vector.identity()
-    carDir = Vector.identity()
+    direction = Vector.identity()
+
+    outerCollisionPoints = []
+    innerCollisionPoints = []
 
 
 class TrackSegment:
@@ -34,7 +37,6 @@ class TrackSegment:
     trackPoints = []
     railType = 0
     trackColor = 0
-    id = 0
     sector = 0
 
     segmentType = TrackSegmentType.STRAIGHT
@@ -348,6 +350,8 @@ class TrackSegment:
             borderWidth = Vector.copy(sideDir).scale(bw2)
 
             t = TrackPoint()
+            t.direction = Vector.copy(d)
+            t.sideDir = Vector.copy(sideDir)
             t.outerTrack = Vector.copy(p).add(trackWidth)
             t.outerRail = Vector.copy(t.outerTrack).add(railWidth)
             t.outerBorder = Vector.copy(t.outerRail).add(borderWidth)
@@ -357,6 +361,37 @@ class TrackSegment:
             t.point = Vector.copy(p)
             _.trackPoints.append(t)
 
+    def computeCollisionPoints(self):
+        _ = self
+        inc = 0.25
+        for i in range(0, len(_.trackPoints)):
+            p1 = _.trackPoints[i]
+            p1.outerCollisionPoints = []
+            p1.innerCollisionPoints = []
+            p2 = None
+            if i < len(_.trackPoints)-2:
+                p2 = _.trackPoints[i+1]
+            else:
+                if _.nextSegment != None:
+                    p2 = _.nextSegment.trackPoints[0]
+            
+            if p2 == None:
+                break
+            
+            for j in range(0,2):
+                v1 = p1.outerRail if j == 0 else p1.innerRail
+                v2 = p2.outerRail if j == 0 else p2.innerRail
+                vdir = Vector.copy(v2).subtract(v1).normalize().scale(inc)
+                l = v1.distanceTo(v2)
+                cnt = Floor(l/inc)
+                for k in range(0,Floor(cnt)+1):
+                    v3 = Vector.copy(v1).add(Vector.copy(vdir).scale(k))
+                    if j == 0:
+                        p1.outerCollisionPoints.append(v3)
+                    else:
+                        p1.innerCollisionPoints.append(v3)
+
+        return
 
 class TrackFeature:
     segments: []
@@ -395,10 +430,10 @@ class Track:
         sector = 0
         count = len(self.segments)
         lastSegment = None
-        lastIdx = 0
+        idx = 0
         if count > 0:
-            lastIdx = count - 1
-            lastSegment = self.segments[lastIdx]
+            idx = count - 1
+            lastSegment = self.segments[idx]
             sector = lastSegment.sector + 1
 
         prev = lastSegment
@@ -417,11 +452,11 @@ class Track:
             prev = s
             self.segments.append(s)
 
-        lastIdx -= 1
-        if lastIdx < 0:
-            lastIdx = 0
+        idx -= 1
+        if idx < 0:
+            idx = 0
 
-        self.compute(lastIdx)
+        self.compute(idx)
 
     def compute(self, startIdx=0):
         prev = None
@@ -439,3 +474,49 @@ class Track:
         for i in range(startIdx, len(self.segments)):
             s = self.segments[i]
             s.computeTrackPoints()
+        
+        for i in range(startIdx, len(self.segments)):
+            s = self.segments[i]
+            s.computeCollisionPoints()
+
+    def detectCollision(self, entity):
+        _ = self
+        bounce = 0.95
+        isWithin = False
+        startIdx = 0
+        try:
+            startIdx = _.segments.index(entity.segment) - 1
+        except:
+            startIdx = 0
+        if startIdx < 0:
+            startIdx = 0
+        entity.segment = None
+        for idx in range(startIdx, len(_.segments)):
+            seg = _.segments[idx]
+            for p in seg.trackPoints:
+
+                # skip points check as much as possible
+                if p.point.distanceTo(entity.pos) > seg.trackWidth * 2:
+                    if isWithin:
+                        break
+                    continue
+                if not isWithin:
+                    entity.segment = seg
+                isWithin = True
+
+                for k in range(0, 2):
+                    barrier = p.outerCollisionPoints if k == 0 else p.innerCollisionPoints
+                    for c in barrier:
+                        dirSign = -1 if k == 0 else 1
+                        if c.distanceTo(entity.pos) < entity.radius:
+                            cross = Vector.copy(c).add(Vector.copy(p.sideDir).scale(entity.radius * dirSign))
+                            dist = cross.distanceTo(entity.pos)
+                            vector = Vector.copy(p.sideDir).scale(dist*bounce*dirSign)
+                            return {
+                                "segment": seg,
+                                "trackPoint": p,
+                                "collisionPoint": c,
+                                "vector": vector
+                            }
+ 
+        return None

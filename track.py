@@ -27,6 +27,18 @@ class TrackPoint:
     outerCollisionPoints = []
     innerCollisionPoints = []
 
+    nextPoint = None
+
+    @staticmethod
+    def advance(t, count):
+        if t == None:
+            return None
+        for i in range(0, count):
+            if t.nextPoint == None:
+                break
+            t = t.nextPoint
+        return t
+
 
 class TrackSegment:
     position = Vector.identity()
@@ -385,9 +397,10 @@ class TrackSegment:
             else:
                 if _.nextSegment != None:
                     p2 = _.nextSegment.trackPoints[0]
-
             if p2 == None:
                 break
+
+            p1.nextPoint = p2
 
             for j in range(0, 2):
                 v1 = p1.outerRail if j == 0 else p1.innerRail
@@ -397,12 +410,13 @@ class TrackSegment:
                 cnt = Floor(l / inc)
                 for k in range(0, Floor(cnt) + 1):
                     v3 = Vector.copy(v1).add(Vector.copy(vdir).scale(k))
+                    d = v3.distanceTo(p1.point)
+                    if d < _.trackWidth / 2:
+                        continue
                     if j == 0:
                         p1.outerCollisionPoints.append(v3)
                     else:
                         p1.innerCollisionPoints.append(v3)
-
-        return
 
 
 class TrackFeature:
@@ -451,6 +465,7 @@ class Track:
         prev = lastSegment
         for ss in segments:
             s = TrackSegment.copy(ss)
+            s.trackWidth *= 1.25
             s.sector = sector
             if prev != None:
                 prev.nextSegment = s
@@ -505,6 +520,9 @@ class Track:
         if startIdx < 0:
             startIdx = 0
 
+        nearestDistance = -1
+
+        pointIndex = 0
         segmentIndex = 0
         if entity.segment != None:
             segmentIndex = entity.segment.index
@@ -514,18 +532,28 @@ class Track:
 
             dx = segmentIndex - seg.index
             dist = Sqr(dx * dx)
-            if dist > 10:
+            if dist > 4:
                 continue
 
             for p in seg.trackPoints:
                 # skip points check as much as possible
-                if p.point.distanceTo(entity.pos) > seg.trackWidth * 2:
+                pdist = p.point.distanceTo(entity.pos)
+                if pdist > seg.trackWidth * 2:
                     if isWithin:
-                        break
+                        return None
                     continue
+
                 if not isWithin:
                     entity.segment = seg
                 isWithin = True
+                pointIndex += 1
+
+                if isWithin and pdist < nearestDistance or nearestDistance == -1:
+                    entity.trackPoint = p
+                    nearestDistance = pdist
+
+                if pointIndex > 10:
+                    return None
 
                 for k in range(0, 2):
                     barrier = (
@@ -541,6 +569,8 @@ class Track:
                             vector = Vector.copy(p.sideDir).scale(
                                 dist * bounce * dirSign
                             )
+                            if dist == 0:
+                                return None
                             return {
                                 "segment": seg,
                                 "force": dist,
@@ -550,3 +580,8 @@ class Track:
                             }
 
         return None
+
+    def addToStartingGrid(self, entity):
+        _ = self
+        entity.pos = Vector.copy(_.segments[1].trackPoints[4].point)
+        entity.direction = Vector.copy(_.segments[1].trackPoints[4].direction)

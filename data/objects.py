@@ -1,7 +1,6 @@
 objects = {
-    "objects": [
-        {
-            "object": "_speed_pad",
+    "objects": {
+        "_speed_pad": {
             "trigger": "boost",
             "radius": 0.45,
             "shapes": [
@@ -37,8 +36,7 @@ objects = {
                 },
             ],
         },
-        {
-            "object": "speed_pad",
+        "speed_pad": {
             "shapes": [
                 {
                     "scale": 0.35,
@@ -51,10 +49,9 @@ objects = {
                         [-1, 0, 0.0],
                     ],
                 }
-            ],
+            ]
         },
-        {
-            "object": "track_arrow",
+        "track_arrow": {
             "shapes": [
                 {
                     "scale": 0.35,
@@ -67,10 +64,9 @@ objects = {
                         [-1, 0, 0.0],
                     ],
                 }
-            ],
+            ]
         },
-        {
-            "object": "item_pickup",
+        "item_pickup": {
             "rotate": 45,
             "consume": 1,
             "radius": 0.4,
@@ -89,8 +85,7 @@ objects = {
                 }
             ],
         },
-        {
-            "object": "item_pickup_round",
+        "item_pickup_round": {
             "rotate": 45,
             "consume": 1,
             "radius": 0.35,
@@ -109,8 +104,7 @@ objects = {
                 }
             ],
         },
-        {
-            "object": "item_pickup_roundX",
+        "item_pickup_roundX": {
             "consume": 1,
             "radius": 0.3,
             "shapes": [
@@ -121,5 +115,5 @@ objects = {
                 }
             ],
         },
-    ]
+    }
 }

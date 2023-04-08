@@ -3,6 +3,9 @@ from draw import Context
 from entity import *
 from data.ships import *
 from data.objects import *
+from track import *
+
+debug = {"entityVectors": False, "steerAssist": False, "collisionPoints": False}
 
 
 def renderTrack(ctx, segment, startSegment=None, distance=8):
@@ -39,6 +42,18 @@ def renderTrack(ctx, segment, startSegment=None, distance=8):
                 innerRail.append([tp.innerRail.x, tp.innerRail.y])
                 innerBorder.append([tp.innerBorder.x, tp.innerBorder.y])
                 renderedDistance += 1
+
+                # debug collision points
+                if debug["collisionPoints"]:
+                    for c in tp.outerCollisionPoints:
+                        # ctx.drawPolygon(c.x, c.y, 0.25, 12, "red")
+                        x = Vector.copy(c).add(Vector.copy(tp.sideDir).scale(-0.25))
+                        ctx.drawLine(x.x, x.y, c.x, c.y, "green")
+                    for c in tp.innerCollisionPoints:
+                        # ctx.drawPolygon(c.x, c.y, 0.25, 12, "red")
+                        x = Vector.copy(c).add(Vector.copy(tp.sideDir).scale(0.25))
+                        ctx.drawLine(x.x, x.y, c.x, c.y, "green")
+
         t = t.nextSegment
 
     for i in range(0, len(outerTrack) - 1):
@@ -46,34 +61,88 @@ def renderTrack(ctx, segment, startSegment=None, distance=8):
         p2 = innerTrack[i]
         v1 = Vector(p1[0], p1[1])
         v2 = Vector(p2[0], p2[1])
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "red")
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
 
     for i in range(0, len(outerTrack) - 1):
         p1 = outerTrack[i]
         p2 = outerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "red")
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
         p1 = innerTrack[i]
         p2 = innerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "red")
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
 
-    ctx.drawPolygonPoints(points, "red", False)
+    ctx.drawPolygonPoints(points, "grey42", False)
     ctx.drawPolygonPoints(outerTrack, "white", False)
-    ctx.drawPolygonPoints(innerTrack, "yellow", False)
     ctx.drawPolygonPoints(outerRail, "white", False)
+    ctx.drawPolygonPoints(innerTrack, "yellow", False)
     ctx.drawPolygonPoints(innerRail, "yellow", False)
 
 
-def renderEntity(ctx, entity):
-    ctx.drawPolygon(entity.pos.x, entity.pos.y, entity.radius, 12, "red")
-    d = Vector.copy(entity.pos).add(Vector.copy(entity.direction).scale(entity.radius))
-    ctx.drawLine(entity.pos.x, entity.pos.y, d.x, d.y, "cyan")
+def renderDebug(ctx, entity):
+    if debug["entityVectors"]:
+        ctx.drawPolygon(entity.pos.x, entity.pos.y, entity.radius, 12, "red")
+        d = Vector.copy(entity.pos).add(
+            Vector.copy(entity.direction).scale(entity.radius)
+        )
+        ctx.drawLine(entity.pos.x, entity.pos.y, d.x, d.y, "cyan")
+        d = Vector.copy(entity.pos).add(
+            Vector.copy(entity.velocity).normalize().scale(entity.radius * 2)
+        )
+        ctx.drawLine(entity.pos.x, entity.pos.y, d.x, d.y, "cyan")
 
-    ctx.drawShape(
-        ships["objects"][2]["shapes"],
-        entity.pos.x,
-        entity.pos.y,
-        entity.radius,
-        entity.angle - 90,
-        "red",
+
+def renderDefault(ctx, entity):
+    if entity.polygon > 0:
+        ctx.drawPolygon(
+            entity.pos.x,
+            entity.pos.y,
+            entity.radius,
+            entity.polygon,
+            "red",
+        )
+
+    if entity.shape != None:
+        ctx.drawShape(
+            entity.shape,
+            entity.pos.x,
+            entity.pos.y,
+            entity.radius,
+            -90 + entity.direction.angle(),
+            "red",
+        )
+
+
+def renderParticle(ctx, entity):
+    v = Vector.copy(entity.pos).add(
+        Vector.copy(entity.direction).scale(-entity.radius * entity.speed)
     )
-    return
+    ctx.drawLine(entity.pos.x, entity.pos.y, v.x, v.y, "red")
+
+
+def renderFloatingText(ctx, entity):
+    ctx.drawText(entity.pos.x, entity.pos.y, entity.text, entity.radius, "red")
+
+
+def renderShip(ctx, entity):
+    renderDefault(ctx, entity)
+
+    if debug["steerAssist"]:
+        if entity.trackPoint != None and entity.targetPoint != None:
+            p1 = Vector.copy(entity.trackPoint.point)
+            p2 = Vector.copy(entity.targetPoint.point)
+            ctx.drawPolygon(p2.x, p2.y, 0.25, 12, "cyan")
+            ctx.drawLine(p1.x, p1.y, p2.x, p2.y, "cyan")
+
+
+class Renderer:
+    defs: dict[EntityType, any] = {
+        EntityType.ship: renderShip,
+        EntityType.particle: renderParticle,
+        EntityType.floatingText: renderFloatingText,
+    }
+
+    @staticmethod
+    def renderEntity(ctx: Context, e: Entity):
+        r = Renderer.defs[e.type]
+        r(ctx, e)
+        renderDebug(ctx, e)

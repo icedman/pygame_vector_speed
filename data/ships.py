@@ -1,7 +1,6 @@
 ships = {
-    "objects": [
-        {
-            "object": "ship_1",
+    "objects": {
+        "ship_1": {
             "shapes": [
                 {
                     "scale": 0.45,
@@ -15,10 +14,9 @@ ships = {
                         [0.0, -0.5, 0.0],
                     ],
                 }
-            ],
+            ]
         },
-        {
-            "object": "ship_2",
+        "ship_2": {
             "shapes": [
                 {
                     "scale": 0.45,
@@ -35,10 +33,9 @@ ships = {
                         [0.0, -0.5, 0.0],
                     ],
                 }
-            ],
+            ]
         },
-        {
-            "object": "ship_3",
+        "ship_3": {
             "shapes": [
                 {
                     "scale": 0.45,
@@ -56,7 +53,7 @@ ships = {
                         [0.0, -0.5, 0.0],
                     ],
                 }
-            ],
+            ]
         },
-    ]
+    }
 }

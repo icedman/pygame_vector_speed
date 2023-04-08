@@ -1,5 +1,5 @@
 angle_2 = {
-    "track": "chicane_4",
+    "track": "angle_2",
     "startAngle": 0,
     "segments": [
         {

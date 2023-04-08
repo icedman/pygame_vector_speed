@@ -3,33 +3,19 @@ from maths import *
 from draw import Context
 from track import *
 from generator import *
-from entity import *
-from data.angle_1 import *
-from data.angle_2 import *
-from data.loop_1 import *
-from data.loop_2 import *
 from renderer import *
+from entity import *
+from particles import *
+from ship import *
 
-feature = TrackFeature()
-feature.loadDefinition(loop_2)
-
-ship = ships["objects"][2]["shapes"]
+entityService.defs[EntityType.ship] = Ship()
+entityService.defs[EntityType.particle] = Particle()
+entityService.defs[EntityType.floatingText] = FloatingText()
+entityService.createParticles = createParticles
+entityService.createFloatingText = createFloatingText
 
 track = TrackGenerator()
 track.buildStart()
-
-for i in range(0, 3):
-    # track.addSector(feature.copySegments())
-    track.addSector(feature.copySegments())
-    # track.compute()
-    track.addSector(
-        [
-            TrackSegment.randomArcSegment(),
-            TrackSegment.randomLineSegment(),
-            TrackSegment.randomArcSegment(),
-        ]
-    )
-    track.addSector(feature.copySegments())
 
 pygame.init()
 # size = [1600, 900]
@@ -58,15 +44,17 @@ released = {}
 
 rot = 0
 off = 0
-obj = Entity()
+obj = entityService.attach(entityService.create(EntityType.ship))
 obj.radius = 0.3
-obj.pos = Vector.copy(track.segments[1].trackPoints[0].point)
+track.addToStartingGrid(obj)
+
+# entityService.createFloatingText(obj.pos.x, obj.pos.y, "+20")
 
 last_tick = 0
 while not done:
     tick = pygame.time.get_ticks()
     dt = tick - last_tick
-    if dt < 24:
+    if dt < 16:
         continue
     last_tick = tick
 
@@ -82,45 +70,68 @@ while not done:
         released[k] = k in keys and keys[k] == True and pressed[k] == False
         keys[k] = pressed[k]
 
-    if pressed[pygame.K_LEFT]:
-        obj.angle -= 2
-    if pressed[pygame.K_RIGHT]:
-        obj.angle += 2
-    if pressed[pygame.K_UP]:
+    if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
+        obj.steerLeft()
+    if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
+        obj.steerRight()
+    if pressed[pygame.K_UP] or pressed[pygame.K_w]:
         obj.throttleUp()
-    if pressed[pygame.K_DOWN]:
+    if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
         obj.throttleDown()
     # else:
     #     obj.throttleUp()
 
-    obj.update(dt)
+    entityService.update(dt)
+    if obj.segment != None:
+        track.buildSector(obj.segment.sector, 2, 2)
+        track.prune(obj.segment.sector, 4)
 
     gfx.clear("black")
     gfx.save()
     gfx.drawRect(0, 0, size[0], size[1], "red")
 
-    scale = 90
+    scale = 90 - (40 * obj.speed / 1)
     gfx.scale(scale, scale)
 
-    v = gfx.transform(Vector.copy(obj.pos))
-    gfx.translate(size[0] / 2 - v.x, size[1] / 2 - v.y)
+    # camera
+    cam = gfx.transform(
+        Vector.copy(obj.pos).add(
+            Vector.copy(obj.direction).scale(obj.radius * 3 + (obj.radius * obj.speed))
+        )
+    )
+    gfx.translate(size[0] / 2 - cam.x, size[1] / 2 - cam.y)
 
     gfx.saveAttributes()
     gfx.state.strokeWidth = 1
-    gfx.state.forcedColor = "grey"
-    renderTrack(gfx, track.segments[0], TrackSegment.advance(obj.segment, 2), 6)
+    gfx.state.forcedColor = "Grey30"
+    renderTrack(gfx, track.segments[0], obj.segment, 8)
+    # renderTrack(gfx, track.segments[0], TrackSegment.advance(obj.segment, 5), 2)
     gfx.restore()
-    renderTrack(gfx, track.segments[0], obj.segment, 2)
+    renderTrack(gfx, track.segments[0], obj.segment, 3)
 
     rad = obj.radius
     col = track.detectCollision(obj)
     if col != None:
         obj.pos.add(col["vector"])
         obj.speed *= 1 - col["force"]
-        if obj.speed < 0:
-            obj.speed = 0
+        if obj.speed < 0.01:
+            obj.speed = 0.01
+        gfx.saveAttributes()
+        gfx.strokeWidth = 4
+        gfx.drawRect(2, 2, size[0] - 4, size[1] - 4, "magenta")
+        gfx.restore()
+        cp = col["collisionPoint"]
+        # gfx.drawPolygon(cp.x, cp.y, 0.5, 8, "yellow")
+        if col["force"] > 0.08:
+            entityService.createParticles(
+                cp.x, cp.y, 1 + Floor(Rand(0, 2) * col["force"])
+            )
+    # else:
+    #     obj.throttleUp()
 
-    renderEntity(gfx, obj)
+    for t in entityService.entities:
+        for e in entityService.entities[t]:
+            Renderer.renderEntity(gfx, e)
 
     gfx.restore()
 

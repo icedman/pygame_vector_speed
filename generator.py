@@ -21,3 +21,16 @@ class TrackGenerator(Track):
             self.defs[featureType] = []
         self.defs[featureType].append(f)
         return f
+
+    def buildStart(self):
+        self.segments = []
+        seg = TrackSegment.randomLineSegment()
+        seg.baseAngle = -65
+        seg.trackWidth = 1.5
+        self.addSector([seg])
+
+    def buildSector(self, sector, distance):
+        return
+
+    def prune(self, sector):
+        return

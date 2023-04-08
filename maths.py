@@ -66,6 +66,9 @@ def Floor(a):
     return math.floor(a)
 
 
+_matrixRotationCache = {}
+
+
 class Matrix:
     M = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
 
@@ -82,6 +85,19 @@ class Matrix:
             for col in range(0, 4):
                 r.M[row][col] = m.M[row][col]
         return r
+
+    @staticmethod
+    def fromAngle(angle):
+        angle = Floor(angle)
+        angle += 640
+        angle = angle % 360
+        if angle in _matrixRotationCache:
+            return Matrix.copy(_matrixRotationCache[angle])
+        m = Matrix.identity()
+        rad = angle * 3.14 / 180
+        m.rotate(0, 0, rad)
+        _matrixRotationCache[angle] = m
+        return Matrix.copy(m)
 
     def add(self, m):
         for row in range(0, 4):
@@ -207,6 +223,9 @@ class Matrix:
         return self
 
 
+_vectorRotationCache = {}
+
+
 class Vector:
     M = [0, 0, 0]
 
@@ -224,6 +243,18 @@ class Vector:
         v = Vector()
         v.M = [1, 0, 0]
         return v
+
+    @staticmethod
+    def fromAngle(angle):
+        angle += 640
+        angle = angle % 360
+        if angle in _vectorRotationCache:
+            return Vector.copy(_vectorRotationCache[angle])
+        rad = angle * 3.14 / 180
+        px = 1 * Cos(rad)
+        py = 1 * Sin(rad)
+        _vectorRotationCache[angle] = Vector(px, py)
+        return Vector.copy(_vectorRotationCache[angle])
 
     @staticmethod
     def copy(m):

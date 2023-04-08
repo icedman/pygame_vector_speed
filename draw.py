@@ -7,12 +7,14 @@ from colors import colors
 
 class ContextState:
     color = "white"
+    forcedColor = None
     strokeWidth = 2
     matrix: Matrix = Matrix.identity()
 
     def __init__(self, copy=None, cloneMatrix=True):
         if copy != None:
             self.color = copy.color
+            self.forcedColor = copy.forcedColor
             self.strokeWidth = copy.strokeWidth
             if cloneMatrix:
                 self.matrix = Matrix.copy(copy.matrix)
@@ -109,6 +111,9 @@ class Context:
     def drawLine(self, x, y, x2, y2, color=None):
         if color == None:
             color = self.state.color
+
+        if self.state.forcedColor != None:
+            color = self.state.forcedColor
 
         m = self.state.matrix
         v1 = Vector(x, y).transform(m)
@@ -230,10 +235,9 @@ class Context:
             adv = self.drawChar(x, y + (-size * 0.5), c, size, color, False)
             x += adv
 
-    def drawShape(self, shapes, x, y, r, angle, color="red"):
+    def drawShape(self, shapes, x, y, r, angle, color="red", matrix=None):
         sl = shapes
-        m = Matrix.identity()
-        m.rotate(0, 0, ((angle + 360 - 90) % 360) * 3.14 / 180)
+        m = Matrix.fromAngle(angle)
         m.multiply(Matrix.identity().scale(r * 1.5, r * 1.5, 1))
         m.multiply(Matrix.identity().translate(x, y, 0))
         for shape in sl:
@@ -247,4 +251,4 @@ class Context:
                 del points[0]
                 self.drawPolygonPoints(points, color)
             if "polygon" in s:
-                self.drawPolygon(0, 0, s["scale"], s["polygon"], color)
+                self.drawPolygon(0, 0, r * s["scale"], s["polygon"], color)

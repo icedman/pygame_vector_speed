@@ -40,6 +40,33 @@ class TrackPoint:
         return t
 
 
+# powerUp = 40
+# arrow = 41
+# speedPad = 42
+# mines = 43
+
+
+class TrackObjectType(Enum):
+    POWERUP = 0
+    ARROW = 1
+    SPEEDPAD = 2
+    MINES = 3
+
+
+class TrackObject:
+    type = TrackObjectType.POWERUP
+    pos = Vector.identity()
+    rendered = False
+    segment = None
+    trackPoint = None
+
+    def __init__(self, segment, trackPoint):
+        _ = self
+        _.segment = segment
+        _.trackPoint = trackPoint
+        _.rendered = False
+
+
 class TrackSegment:
     position = Vector.identity()
 
@@ -72,6 +99,14 @@ class TrackSegment:
     prevSegment = None
     nextSegment = None
 
+    objects = []
+
+    def __init__(self):
+        _ = self
+        _.points = []
+        _.trackPoints = []
+        _.objects = []
+
     @staticmethod
     def copy(t):
         _ = TrackSegment()
@@ -84,9 +119,6 @@ class TrackSegment:
         _.innerRail = t.innerRail
         _.trackWidth = t.trackWidth
         _.splitWidth = t.splitWidth
-        # _.points = []
-        # _.position = Vector.identity()
-        # _.endPoint = Vector.identity()
         return t
 
     def loadDefinition(self, yml):
@@ -322,7 +354,7 @@ class TrackSegment:
                 v3 = v1.add(v2).scale(0.5)
                 points[i + 1] = v3
 
-    def computeTrackPoints(self):
+    def computeTrackPoints(self, index=0):
         _ = self
         _.trackPoints = []
 
@@ -382,6 +414,8 @@ class TrackSegment:
             t.innerRail = Vector.copy(t.innerTrack).subtract(railWidth)
             t.innerBorder = Vector.copy(t.innerRail).subtract(borderWidth)
             t.point = Vector.copy(p)
+            t.index = index
+            index += 1
             _.trackPoints.append(t)
 
     def computeCollisionPoints(self):
@@ -487,6 +521,10 @@ class Track:
         self.compute(idx)
 
     def compute(self, startIdx=0):
+        index = 0
+        seg = self.segments[startIdx]
+        if seg.prevSegment != None:
+            index = seg.trackPoints[len(seg.trackPoints) - 1].index + 1
         prev = None
         for i in range(startIdx, len(self.segments)):
             s = self.segments[i]
@@ -501,7 +539,8 @@ class Track:
 
         for i in range(startIdx, len(self.segments)):
             s = self.segments[i]
-            s.computeTrackPoints()
+            s.computeTrackPoints(index)
+            index += len(s.trackPoints)
 
         for i in range(startIdx, len(self.segments)):
             s = self.segments[i]
@@ -510,7 +549,7 @@ class Track:
     def detectCollision(self, entity):
         _ = self
         rad = entity.radius * 0.95
-        bounce = 0.95
+        bounce = 1
         isWithin = False
         startIdx = 0
         try:

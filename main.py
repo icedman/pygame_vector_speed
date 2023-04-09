@@ -7,12 +7,12 @@ from renderer import *
 from entity import *
 from particles import *
 from ship import *
+from powerup import *
+from state import *
+from game import *
 
-entityService.defs[EntityType.ship] = Ship()
-entityService.defs[EntityType.particle] = Particle()
-entityService.defs[EntityType.floatingText] = FloatingText()
-entityService.createParticles = createParticles
-entityService.createFloatingText = createFloatingText
+game = Game()
+game.newGame()
 
 track = TrackGenerator()
 track.buildStart()
@@ -42,12 +42,13 @@ trackKeys = [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]
 keys = {}
 released = {}
 
-rot = 0
-off = 0
 obj = entityService.attach(entityService.create(EntityType.ship))
 obj.radius = 0.3
+obj.track = track
 track.addToStartingGrid(obj)
+gameState.player = obj
 
+# entityService.attach(entityService.create(EntityType.powerUp, obj.pos.x, obj.pos.y))
 # entityService.createFloatingText(obj.pos.x, obj.pos.y, "+20")
 
 last_tick = 0
@@ -78,12 +79,10 @@ while not done:
         obj.throttleUp()
     if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
         obj.throttleDown()
-    # else:
-    #     obj.throttleUp()
 
     entityService.update(dt)
     if obj.segment != None:
-        track.buildSector(obj.segment.sector, 2, 2)
+        track.buildSector(obj.segment.sector, 2, 4)
         track.prune(obj.segment.sector, 4)
 
     gfx.clear("black")
@@ -101,33 +100,7 @@ while not done:
     )
     gfx.translate(size[0] / 2 - cam.x, size[1] / 2 - cam.y)
 
-    gfx.saveAttributes()
-    gfx.state.strokeWidth = 1
-    gfx.state.forcedColor = "Grey30"
-    renderTrack(gfx, track.segments[0], obj.segment, 8)
-    # renderTrack(gfx, track.segments[0], TrackSegment.advance(obj.segment, 5), 2)
-    gfx.restore()
-    renderTrack(gfx, track.segments[0], obj.segment, 3)
-
-    rad = obj.radius
-    col = track.detectCollision(obj)
-    if col != None:
-        obj.pos.add(col["vector"])
-        obj.speed *= 1 - col["force"]
-        if obj.speed < 0.01:
-            obj.speed = 0.01
-        gfx.saveAttributes()
-        gfx.strokeWidth = 4
-        gfx.drawRect(2, 2, size[0] - 4, size[1] - 4, "magenta")
-        gfx.restore()
-        cp = col["collisionPoint"]
-        # gfx.drawPolygon(cp.x, cp.y, 0.5, 8, "yellow")
-        if col["force"] > 0.08:
-            entityService.createParticles(
-                cp.x, cp.y, 1 + Floor(Rand(0, 2) * col["force"])
-            )
-    # else:
-    #     obj.throttleUp()
+    renderTrack(gfx, track.segments[0], gameState.player)
 
     for t in entityService.entities:
         for e in entityService.entities[t]:
@@ -136,5 +109,3 @@ while not done:
     gfx.restore()
 
     pygame.display.flip()
-
-    rot += 1

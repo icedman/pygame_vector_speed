@@ -60,7 +60,9 @@ class TrackGenerator(Track):
         last = self.segments[len(self.segments) - 1]
         if (last.sector - sector) < threshold:
             for i in range(0, distance):
-                self.addSector(self.randomSector(last.sector))
+                segments = self.randomSector(last.sector)
+                self.addSector(segments)
+                self.decorate(segments)
 
     def prune(self, sector, distance):
         first = self.segments[0]
@@ -107,3 +109,44 @@ class TrackGenerator(Track):
             return self.randomFeature("hairpin")
 
         return [TrackSegment.randomLineSegment()]
+
+    def decorateSegment(self, segment):
+        targetCount = len(segment.trackPoints)
+        for p in segment.trackPoints:
+            if len(segment.objects) >= targetCount:
+                break
+
+            offsetLeft = Vector.copy(p.sideDir).scale(segment.trackWidth * 0.25)
+            offsetRight = Vector.copy(p.sideDir).scale(segment.trackWidth * -0.25)
+
+            if (Rand(0, 100)) < 10:
+                obj = TrackObject(segment, p)
+                obj.pos = Vector.copy(p.point)
+                obj.type = TrackObjectType.ARROW
+
+                rnd = Rand(0, 100)
+
+                speed_pad_chances = 15
+                if segment.sector + 1 > 3:
+                    speed_pad_chances += 5
+                if segment.sector + 1 > 7:
+                    speed_pad_chances += 10
+                if segment.sector + 1 > 10:
+                    speed_pad_chances += 15
+                if rnd < speed_pad_chances:
+                    obj.type = TrackObjectType.SPEEDPAD
+                elif Rand(0, 100) < 20:
+                    obj.type = TrackObjectType.POWERUP
+
+                segment.objects.append(obj)
+                if (Rand(0, 100)) < 20:
+                    where = Rand(0, 100) % 3
+                    if where == 0:
+                        obj.pos.add(offsetLeft)
+                    elif where == 1:
+                        obj.pos.add(offsetRight)
+
+    def decorate(self, segments):
+        for s in segments:
+            self.decorateSegment(s)
+        return segments

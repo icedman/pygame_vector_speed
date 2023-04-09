@@ -5,9 +5,14 @@ from data.ships import *
 
 
 class EntityType(Enum):
-    ship = 1
-    particle = 2
-    floatingText = 3
+    ship = 10
+    particle = 20
+    floatingText = 21
+    explosion = 22
+    powerUp = 40
+    arrow = 41
+    speedPad = 42
+    mines = 43
     none = 100
 
 
@@ -16,6 +21,7 @@ class Entity:
     shape = None
     polygon = 0
     radius = 0.5
+    visible = True
     ttl = 0
 
     pos = Vector.identity()
@@ -71,8 +77,14 @@ class EntityService:
     createParticles: any
     createFloatingText: any
 
+    # this also determines rendering order
     defs = {
+        EntityType.speedPad: None,
+        EntityType.arrow: None,
+        EntityType.powerUp: None,
+        EntityType.mines: None,
         EntityType.ship: None,
+        EntityType.explosion: None,
         EntityType.particle: None,
         EntityType.floatingText: None,
     }

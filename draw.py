@@ -244,10 +244,11 @@ class Context:
             s = shape
             if "points" in s:
                 points = []
+                p0 = s["points"][0]
+                v0 = Vector(p0[0] * r * 15, p0[1] * r * 15)
                 for p in s["points"]:
-                    tp = Vector(p[0], p[1]).transform(m)
+                    tp = Vector(p[0], p[1]).add(v0).transform(m)
                     points.append([tp.x, tp.y])
-                # self.translate(points[0][0] * r, points[0][1] * r)
                 del points[0]
                 self.drawPolygonPoints(points, color)
             if "polygon" in s:

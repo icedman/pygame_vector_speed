@@ -4,6 +4,7 @@ class GameState:
     screenHeight = 0
     gameOver = False
     tick = 0
+    countDown = 0
 
     screen = {"width": 1024, "height": 768}
     trackedKeys = {}
@@ -13,6 +14,7 @@ class GameState:
     track = None
 
     cam = None
+    tinted = False
 
     def init(self):
         _ = self
@@ -23,6 +25,7 @@ class GameState:
         _.player = None
         _.track = None
         _.cam = None
+        _.countDown = 6000
         for k in _.trackedKeys:
             _.pressed[_.trackedKeys[k]] = False
             _.released[_.trackedKeys[k]] = False

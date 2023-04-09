@@ -187,16 +187,21 @@ def renderShip(ctx, entity):
         ctx.state.forcedColor = "Grey23"
 
     # trail
+    trailOffset = Vector.copy(entity.direction).scale(-0.15)
+    ctx.state.strokeWidth = 3
     points = []
+    sz = 0.001
     for i in range(0, len(entity.trail) - 1):
-        v = entity.trail[i]
-        points.append([v.x, v.y])
+        v = Vector.copy(entity.trail[i])
+        v.add(trailOffset)
+        points.append([v.x + Rand(-1, 1) * sz, v.y + Rand(-1, 1) * sz])
     if len(points) > 2:
         ctx.drawPolygonPoints(points, "yellow", False)
     points = []
     for i in range(0, len(entity.trail) - 2):
-        v = entity.trail[i]
-        points.append([v.x, v.y])
+        v = Vector.copy(entity.trail[i])
+        v.add(trailOffset)
+        points.append([v.x + Rand(-1, 1) * sz, v.y + Rand(-1, 1) * sz])
     if len(points) > 2:
         ctx.drawPolygonPoints(points, "red", False)
 

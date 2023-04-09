@@ -22,6 +22,8 @@ class Ship(Entity):
     shield = 1000
     indestructible = False
 
+    race_position = 0
+
     def init(self):
         _ = self
         _.shape = ships["objects"]["ship_3"]
@@ -118,8 +120,11 @@ class Ship(Entity):
         vn = Vector.copy(_.velocity).normalize()
 
         # collide other ships
+        _.race_position = 1
         others = self.otherShips()
         for o in others:
+            if o.trackPoint.index > _.trackPoint.index:
+                _.race_position += 1
             m = self.distanceTo(o)
             if m != None and m < 4:
                 dist = o.pos.distanceTo(_.pos)
@@ -273,6 +278,9 @@ class Ship(Entity):
                     continue
                 res.append(e)
         return res
+
+    def setGraphics(self, name):
+        self.shape = ships["objects"][name]
 
 
 class EnemyShip(Ship):

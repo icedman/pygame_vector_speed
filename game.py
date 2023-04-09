@@ -33,8 +33,13 @@ class Game:
 
         track.attachToStartingGrid(player)
 
-        enemy = entityService.attach(entityService.create(EntityType.enemyShip))
-        track.attachToStartingGrid(enemy, 2)
+        enemy1 = entityService.attach(entityService.create(EntityType.enemyShip))
+        enemy1.setGraphics("ship_2")
+        track.attachToStartingGrid(enemy1, 2)
+
+        enemy2 = entityService.attach(entityService.create(EntityType.enemyShip))
+        enemy2.setGraphics("ship_1")
+        track.attachToStartingGrid(enemy2, 4)
 
     def clear(self):
         entityService.init()
@@ -43,6 +48,11 @@ class Game:
         return
 
     def update(self, dt):
+        if gameState.countDown > 0:
+            gameState.countDown -= dt
+            return
+
+        gameState.tick += dt
         track = gameState.track
         player = gameState.player
 

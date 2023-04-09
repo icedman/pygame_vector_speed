@@ -257,4 +257,63 @@ colors = {
     "Grey93": [238, 238, 238],
 }
 
+_colors = {}
 colors["Gray"] = colors["Grey62"]
+colors["Indigo"] = colors["Purple"]
+
+
+def dot(r, g, b, rr, gg, bb):
+    return (rr * r) + (gg * g) + (bb * b)
+
+
+def mix(a, b, p):
+    return a * p + b * (1 - p)
+
+
+def isDark(r, g, b):
+    luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    return luma < 40
+
+
+def brighten(clr):
+    cr = clr[0]
+    cg = clr[1]
+    cb = clr[2]
+    p = 0.9
+    if isDark(cr, cg, cb):
+        p = 0.1
+    return [
+        mix(cr, 255, p),
+        mix(cg, 255, p),
+        mix(cb, 255, p),
+    ]
+
+
+def greyscale(color, p):
+    g = dot(color[0], color[1], color[2], 0.299, 0.587, 0.114)
+    return [mix(color[0], g, p), mix(color[1], g, p), mix(color[2], g, p)]
+
+
+def tint(r, g, b, p):
+    for cc in colors:
+        if cc in _colors:
+            break
+        _colors[cc] = colors[cc]
+    for cc in _colors:
+        colors[cc] = greyscale(_colors[cc], 0.1)
+        clr = colors[cc]
+        cr = clr[0]
+        cg = clr[1]
+        cb = clr[2]
+        colors[cc] = [
+            mix(cr, r, p),
+            mix(cg, g, p),
+            mix(cb, b, p),
+        ]
+        colors[cc] = brighten(colors[cc])
+
+
+def untint():
+    tint(255, 255, 255, 0)
+    for cc in colors:
+        colors[cc] = _colors[cc]

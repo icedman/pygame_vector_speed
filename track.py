@@ -364,8 +364,8 @@ class TrackSegment:
 
         tw = _.trackWidth
         mtw = tw if tw < 1 else 1
-        rw = mtw * 0.5
-        bw = mtw * 0.1
+        rw = mtw * 0.7
+        bw = mtw * 0.35
         sw = _.splitWidth
         tw2 = tw / 2
         rw2 = rw / 2
@@ -504,7 +504,7 @@ class Track:
         prev = lastSegment
         for ss in segments:
             s = TrackSegment.copy(ss)
-            s.trackWidth *= 1.25
+            # s.trackWidth *= 1.25
             s.sector = sector
             if prev != None:
                 prev.nextSegment = s

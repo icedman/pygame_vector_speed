@@ -2,7 +2,7 @@ sectors = {
     "sectors": [
         {
             "sector": 1,
-            "color": "green",
+            "color": "white",
             "features": {
                 "randoms": 1,
                 "straights": 5,

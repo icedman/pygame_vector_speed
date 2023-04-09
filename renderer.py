@@ -80,16 +80,18 @@ def renderSegment(ctx, segment, dark=False):
     for i in range(0, len(outerTrack) - 1):
         p1 = outerTrack[i]
         p2 = outerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], segment.color)
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
         p1 = innerTrack[i]
         p2 = innerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], segment.color)
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
 
     # ctx.drawPolygonPoints(points, "grey42", False)
-    ctx.drawPolygonPoints(outerTrack, segment.color, False)
+    ctx.drawPolygonPoints(outerTrack, "grey42", False)
+    ctx.drawPolygonPoints(innerTrack, "grey42", False)
     ctx.drawPolygonPoints(outerRail, segment.color, False)
-    ctx.drawPolygonPoints(innerTrack, segment.color, False)
     ctx.drawPolygonPoints(innerRail, segment.color, False)
+    ctx.drawPolygonPoints(outerBorder, segment.color, False)
+    ctx.drawPolygonPoints(innerBorder, segment.color, False)
 
     ctx.restore()
 

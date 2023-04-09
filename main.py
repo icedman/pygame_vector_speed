@@ -6,6 +6,24 @@ from game import *
 from track import *
 from generator import *
 from colors import tint, untint
+from sounds import *
+
+pygame.init()
+
+# setup sounds
+soundService.defs[Effects.mines] = pygame.mixer.Sound("./sounds/draven/spawn/d1.wav")
+soundService.defs[Effects.countDown] = pygame.mixer.Sound(
+    "./sounds/sounds/buttonselect/1.wav"
+)
+soundService.defs[Effects.bump] = pygame.mixer.Sound("./sounds/sounds/laserd.wav")
+soundService.defs[Effects.speedpad] = pygame.mixer.Sound("./sounds/draven/spawn/d5.wav")
+soundService.defs[Effects.powerup] = pygame.mixer.Sound(
+    "./sounds/jalastram/powerup.mp3"
+)
+soundService.defs[Effects.explosion] = pygame.mixer.Sound("./sounds/draven/bomb.wav")
+
+for d in soundService.defs:
+    soundService.defs[d].set_volume(0.25)
 
 gameState.trackedKeys = {
     pygame.K_UP: "up",
@@ -60,7 +78,6 @@ meter = generate_meter(0, 0)
 
 # tint(255, 0, 0, 0.6)
 
-pygame.init()
 # size = [1600, 900]
 size = [1280, 800]
 screen = pygame.display.set_mode(size)
@@ -197,6 +214,9 @@ def render_hud(dt):
         cs = "{}".format(c)
         if cd - c < 0.30:
             cs = ""
+        if gameState.lastCount != c and c <= 3:
+            soundService.play(Effects.countDown)
+            gameState.lastCount = c
         if c <= 3:
             if c == 0:
                 cs = "GO"
@@ -331,3 +351,11 @@ while not done:
     log = []
 
     pygame.display.flip()
+
+    for r in soundService.requests:
+        cnt = soundService.requests[r]
+        del soundService.requests[r]
+        snd = soundService.defs[r]
+        pygame.mixer.Sound.stop(snd)
+        pygame.mixer.Sound.play(snd)
+        break

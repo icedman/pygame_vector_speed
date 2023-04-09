@@ -2,7 +2,7 @@ from entity import *
 from track import *
 from maths import *
 from state import *
-
+from sounds import *
 
 class Ship(Entity):
     track = None
@@ -77,6 +77,7 @@ class Ship(Entity):
             entityService.create(EntityType.explosion, _.pos.x, _.pos.y)
         )
         gameState.gameOver = True
+        soundService.play(Effects.explosion)
 
     def throttleUp(self):
         _ = self
@@ -155,13 +156,11 @@ class Ship(Entity):
                 dist = o.pos.distanceTo(_.pos)
                 if dist < o.radius + _.radius:
                     repel = Vector.copy(o.pos).subtract(_.pos).normalize()
-
                     cp = Vector.copy(_.pos).add(Vector.copy(repel).scale(dist * 0.5))
                     parts = entityService.createParticles(cp.x, cp.y, Rand(1, 2))
                     for pp in parts:
                         pp.ttl = 250
                         pp.speed = 0.05
-
                     o.pos.add(Vector.copy(repel).scale(dist * 0.2))
                     _.pos.add(Vector.copy(repel).scale(dist * -0.2))
                     o.damage(10)

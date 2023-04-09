@@ -5,6 +5,7 @@ class GameState:
     gameOver = False
     tick = 0
     countDown = 0
+    lastCount = 0
 
     screen = {"width": 1024, "height": 768}
     trackedKeys = {}
@@ -26,6 +27,7 @@ class GameState:
         _.track = None
         _.cam = None
         _.countDown = 6000
+        _.lastCount = 0
         for k in _.trackedKeys:
             _.pressed[_.trackedKeys[k]] = False
             _.released[_.trackedKeys[k]] = False

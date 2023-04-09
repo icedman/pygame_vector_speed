@@ -1,7 +1,7 @@
 from entity import *
 from data.objects import *
 from state import *
-
+from sounds import *
 
 class PowerUp(Entity):
     active = True
@@ -42,6 +42,7 @@ class PowerUp(Entity):
         entityService.destroy(self)
         entityService.createFloatingText(_.pos.x, _.pos.y, "+shield")
         gameState.player.shield += 100
+        soundService.play(Effects.powerup)
         if gameState.player.shield > gameState.player.max_shield:
             gameState.player.max_shield = gameState.player.shield
 
@@ -73,6 +74,7 @@ class SpeedPad(PowerUp):
         _ = self
         _.active = True
         gameState.player.boost()
+        soundService.play(Effects.speedpad)
 
 
 class Mines(PowerUp):
@@ -94,6 +96,7 @@ class Mines(PowerUp):
         entityService.createFloatingText(_.pos.x, _.pos.y, "mines!!!").color = "white"
         gameState.player.damage(75)
         gameState.player.speed *= 0.5
+        soundService.play(Effects.mines)
 
     # def update(self, dt):
     #     PowerUp.update(self, dt)

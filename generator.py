@@ -143,7 +143,7 @@ class TrackGenerator(Track):
 
                 segment.objects.append(obj)
 
-                if obj.type != TrackObjectType.ARROW:
+                if obj.type == TrackObjectType.POWERUP:
                     if (Rand(0, 100)) < 20:
                         where = Rand(0, 100) % 3
                         if where == 0:
@@ -178,6 +178,11 @@ class TrackGenerator(Track):
                         obj.pos.add(offsetRight)
 
     def decorate(self, segments):
+        _ = self
         for s in segments:
-            self.decorateSegment(s)
+            _.decorateSegment(s)
+            index = Floor((s.trackPoints[0].index / 300))
+            l = len(_.defs["sectors"])
+            sec = _.defs["sectors"][index % l]
+            s.color = sec["color"]
         return segments

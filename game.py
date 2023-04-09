@@ -52,7 +52,9 @@ class Game:
             gameState.countDown -= dt
             return
 
-        gameState.tick += dt
+        if gameState.gameOver != True:
+            gameState.tick += dt
+            
         track = gameState.track
         player = gameState.player
 

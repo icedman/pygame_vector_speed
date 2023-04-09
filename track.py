@@ -105,6 +105,7 @@ class TrackSegment:
     objects = []
 
     # render hit
+    color = "white"
     dark = False
     pruned = False
 
@@ -156,12 +157,8 @@ class TrackSegment:
         _.outerRail = outerRail
         _.length = 2 + Rnd(0, 16)
 
-        if _.length >= 4 and (Rand(0, 1000) % 100) < 30:
-            _.splitWidth = 0.15 + Rnd(0, 0.35)
-
-        # split disabled
-        if _.sector < 4:
-            _.splitWidth = 0
+        # if _.length >= 4 and (Rand(0, 1000) % 100) < 30:
+        #     _.splitWidth = 0.15 + Rnd(0, 0.35)
 
         return _
 

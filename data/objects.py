@@ -6,7 +6,7 @@ objects = {
             "shapes": [
                 {
                     "scale": 0.35,
-                    "color": "Indigo",
+                    "color": "Magenta",
                     "points": [
                         [0.0, -0.45, 0.0],
                         [-1, 0, 0.0],
@@ -16,7 +16,7 @@ objects = {
                 },
                 {
                     "scale": 0.35,
-                    "color": "Indigo",
+                    "color": "Magenta",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [-1, 0, 0.0],
@@ -26,7 +26,7 @@ objects = {
                 },
                 {
                     "scale": 0.35,
-                    "color": "Indigo",
+                    "color": "Magenta",
                     "points": [
                         [0.0, 0.45, 0.0],
                         [-1, 0, 0.0],
@@ -55,7 +55,7 @@ objects = {
             "shapes": [
                 {
                     "scale": 0.35,
-                    "color": "DarkGray",
+                    "color": "Grey62",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [-1, 0, 0.0],
@@ -73,7 +73,7 @@ objects = {
             "shapes": [
                 {
                     "scale": 0.35,
-                    "color": "Red",
+                    "color": "Yellow",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [-0.5, 0.5, 0.0],
@@ -92,7 +92,7 @@ objects = {
             "shapes": [
                 {
                     "scale": 0.25,
-                    "color": "Yellow",
+                    "color": "Red",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [-0.5, 0.5, 0.0],

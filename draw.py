@@ -250,6 +250,8 @@ class Context:
                     tp = Vector(p[0], p[1]).add(v0).transform(m)
                     points.append([tp.x, tp.y])
                 del points[0]
-                self.drawPolygonPoints(points, color)
+
+                clr = color if not "color" in s else s["color"]
+                self.drawPolygonPoints(points, clr)
             if "polygon" in s:
                 self.drawPolygon(0, 0, r * s["scale"], s["polygon"], color)

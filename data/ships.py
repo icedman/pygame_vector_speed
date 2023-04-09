@@ -4,7 +4,7 @@ ships = {
             "shapes": [
                 {
                     "scale": 0.45,
-                    "color": "Blue",
+                    "color": "Red",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [0.0, -0.5, 0.0],
@@ -20,7 +20,7 @@ ships = {
             "shapes": [
                 {
                     "scale": 0.45,
-                    "color": "Red",
+                    "color": "Orange",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [0.0, -0.5, 0.0],
@@ -39,7 +39,7 @@ ships = {
             "shapes": [
                 {
                     "scale": 0.45,
-                    "color": "Red",
+                    "color": "Cyan",
                     "points": [
                         [0.0, 0.0, 0.0],
                         [0.0, -0.5, 0.0],

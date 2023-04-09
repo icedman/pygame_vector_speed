@@ -80,16 +80,16 @@ def renderSegment(ctx, segment, dark=False):
     for i in range(0, len(outerTrack) - 1):
         p1 = outerTrack[i]
         p2 = outerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], segment.color)
         p1 = innerTrack[i]
         p2 = innerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
+        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], segment.color)
 
     # ctx.drawPolygonPoints(points, "grey42", False)
-    ctx.drawPolygonPoints(outerTrack, "white", False)
-    ctx.drawPolygonPoints(outerRail, "white", False)
-    ctx.drawPolygonPoints(innerTrack, "yellow", False)
-    ctx.drawPolygonPoints(innerRail, "yellow", False)
+    ctx.drawPolygonPoints(outerTrack, segment.color, False)
+    ctx.drawPolygonPoints(outerRail, segment.color, False)
+    ctx.drawPolygonPoints(innerTrack, segment.color, False)
+    ctx.drawPolygonPoints(innerRail, segment.color, False)
 
     ctx.restore()
 
@@ -169,11 +169,11 @@ def renderParticle(ctx, entity):
     v = Vector.copy(entity.pos).add(
         Vector.copy(entity.direction).scale(-entity.radius * entity.speed)
     )
-    ctx.drawLine(entity.pos.x, entity.pos.y, v.x, v.y, "red")
+    ctx.drawLine(entity.pos.x, entity.pos.y, v.x, v.y, RndOr("red", "orange"))
 
 
 def renderFloatingText(ctx, entity):
-    ctx.drawText(entity.pos.x, entity.pos.y, entity.text, entity.radius, "red")
+    ctx.drawText(entity.pos.x, entity.pos.y, entity.text, entity.radius, entity.color)
 
 
 def renderMines(ctx, entity):
@@ -188,7 +188,7 @@ def renderShip(ctx, entity):
 
     # trail
     trailOffset = Vector.copy(entity.direction).scale(-0.15)
-    ctx.state.strokeWidth = 3
+    ctx.state.strokeWidth = 2
     points = []
     sz = 0.001
     for i in range(0, len(entity.trail) - 1):
@@ -196,16 +196,17 @@ def renderShip(ctx, entity):
         v.add(trailOffset)
         points.append([v.x + Rand(-1, 1) * sz, v.y + Rand(-1, 1) * sz])
     if len(points) > 2:
-        ctx.drawPolygonPoints(points, "yellow", False)
+        ctx.drawPolygonPoints(points, RndOr("yellow", "white"), False)
+    ctx.state.strokeWidth = 1
     points = []
     for i in range(0, len(entity.trail) - 2):
         v = Vector.copy(entity.trail[i])
         v.add(trailOffset)
         points.append([v.x + Rand(-1, 1) * sz, v.y + Rand(-1, 1) * sz])
     if len(points) > 2:
-        ctx.drawPolygonPoints(points, "red", False)
+        ctx.drawPolygonPoints(points, RndOr("red", "orange"), False)
 
-    ctx.state.strokeWidth = 3
+    ctx.state.strokeWidth = 1.5
     renderDefault(ctx, entity)
 
     if debug["steerAssist"]:

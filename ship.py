@@ -19,6 +19,7 @@ class Ship(Entity):
 
     # parameters
     max_speed = 0.8
+    max_shield = 10000
     shield = 1000
     indestructible = False
 
@@ -40,7 +41,8 @@ class Ship(Entity):
         _.boost_t = 0
         _.collide_t = 0
         _.max_speed = 0.8
-        _.shield = 100
+        _.max_shield = 10000
+        _.shield = _.max_shield
         _.indestructible = False
 
     def create(self):
@@ -53,8 +55,28 @@ class Ship(Entity):
 
     def damage(self, amount=50):
         _ = self
+        if _.indestructible:
+            return
         _.shield -= amount
         _.damage_t = 500
+
+        if _.shield <= 0:
+            self.disable()
+
+    def disable(self):
+        _ = self
+        _.shield = 0
+        _.speed = 0
+        _.boost_t = 0
+        _.damage_t = 0
+        _.collide_t = 0
+        _.trail = []
+        self.visible = False
+        entityService.createParticles(_.pos.x, _.pos.y, 3, 1)
+        entityService.attach(
+            entityService.create(EntityType.explosion, _.pos.x, _.pos.y)
+        )
+        gameState.gameOver = True
 
     def throttleUp(self):
         _ = self
@@ -76,6 +98,9 @@ class Ship(Entity):
 
     def update(self, dt):
         _ = self
+
+        if _.shield <= 0:
+            return
 
         # input
         if _.throttle > 0:

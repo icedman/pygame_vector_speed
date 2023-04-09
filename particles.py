@@ -80,6 +80,7 @@ def createFloatingText(x, y, text, toEntity=None):
     p.text = text
     p.direction = Vector(1, 1)
     p.speed = 0.01
+    p.color = "yellow"
     p.toEntity = toEntity
     entityService.attach(p)
     return p

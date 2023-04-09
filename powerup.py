@@ -40,7 +40,11 @@ class PowerUp(Entity):
     def activate(self):
         _ = self
         entityService.destroy(self)
-        entityService.createFloatingText(_.pos.x, _.pos.y, "+20")
+        entityService.createFloatingText(_.pos.x, _.pos.y, "+shield")
+        gameState.player.shield += 100
+        if gameState.player.shield > gameState.player.max_shield:
+            gameState.player.max_shield = gameState.player.shield
+
 
 
 class Arrow(PowerUp):
@@ -87,6 +91,7 @@ class Mines(PowerUp):
         entityService.attach(
             entityService.create(EntityType.explosion, _.pos.x, _.pos.y)
         )
+        entityService.createFloatingText(_.pos.x, _.pos.y, "mines!!!").color = "white"
         gameState.player.damage(75)
         gameState.player.speed *= 0.5
 

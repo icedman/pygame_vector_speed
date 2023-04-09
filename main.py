@@ -3,6 +3,8 @@ from maths import *
 from draw import Context
 from renderer import *
 from game import *
+from track import *
+from generator import *
 from colors import tint, untint
 
 gameState.trackedKeys = {
@@ -10,6 +12,7 @@ gameState.trackedKeys = {
     pygame.K_DOWN: "down",
     pygame.K_LEFT: "left",
     pygame.K_RIGHT: "right",
+    pygame.K_ESCAPE: "escape",
     pygame.K_SPACE: " ",
     pygame.K_w: "w",
     pygame.K_a: "a",
@@ -21,6 +24,36 @@ gameState.trackedKeys = {
 gameState.init()
 
 game = Game()
+def generate_meter(x, y):
+    t = TrackGenerator()
+    t.addSector([
+        TrackSegment.randomArcSegment(),
+        TrackSegment.randomLineSegment(),
+    ])
+    t.segments[0].segmentType = TrackSegmentType.ARC_LEFT
+    t.segments[0].baseAngle = -45
+    t.segments[0].arc = 45
+    t.segments[0].radius = 0.1
+    t.segments[0].startRadius = 0.1
+    t.segments[0].endRadius = 0.08
+    t.segments[1].length = 8
+    t.compute(0)
+
+    res = []
+    m = Matrix.identity().scale(20, 20, 1)
+    m.multiply(Matrix.identity().translate(x, y, 0))
+    tp = t.segments[0].trackPoints[0]
+    while tp != None:
+        v = Vector.copy(tp.point).transform(m)
+        res.append([v.x, v.y])
+        nextTp = TrackPoint.advance(tp, 1)
+        if nextTp == tp:
+            break
+        tp = nextTp
+
+    return res
+
+meter = generate_meter(0, 0)
 
 # tint(0, 255, 0, 0.6)
 # gameState.tinted = True
@@ -153,6 +186,9 @@ def render_hud(dt):
     player = gameState.player
     track = gameState.track
 
+    if gameState.gameOver:
+        gfx.drawText(size[0] / 2, size[1] / 2, "Game Over", 2, "red")
+
     # count down
     if gameState.countDown > 0:
         gfx.saveAttributes()
@@ -170,11 +206,6 @@ def render_hud(dt):
         gfx.restore()
         return
 
-    if player.boost_t > 0:
-        print_log("boost")
-    if player.damage_t > 0:
-        print_log("damage")
-
     # race position
     gfx.saveAttributes()
 
@@ -190,7 +221,7 @@ def render_hud(dt):
     # travel
     pos = [40, size[1] - 100]
     gfx.state.strokeWidth = 3
-    gfx.drawText(pos[0], pos[1], "{}".format(Floor(player.travel)), 2, "yellow", 1)
+    gfx.drawText(pos[0], pos[1], "{}".format(Floor(player.travel)), 2, "white", 1)
 
     # time
     pos = [40, size[1] - 60]
@@ -210,10 +241,47 @@ def render_hud(dt):
         1,
     )
 
+    # meters
+    l = len(meter)
+    gfx.save()
+    gfx.state.strokeWidth = 8
+    # speed
+    pos = [size[0]-240, size[1]-30]
+    gfx.translate(pos[0], pos[1])
+    gfx.drawPolygonPoints(meter, "white", False)
+    sp = gameState.player.speed / gameState.player.max_speed
+    mm = []
+    for i in range(0, Floor(l*sp)):
+        mm.append(meter[i])
+    gfx.drawPolygonPoints(mm, "cyan", False)
+    # shield
+    pos = [10, 20]
+    gfx.translate(pos[0], pos[1])
+    gfx.drawPolygonPoints(meter, "white", False)
+    sp = gameState.player.shield / gameState.player.max_shield
+    color = "green"
+    if sp < 0.1:
+        color = "red"
+        if gameState.player.shield <= 0:
+            print_log("ship disabled")
+        else:
+            print_log("warning")
+    mm = []
+    for i in range(0, Floor(l*sp)):
+        mm.append(meter[i])
+    gfx.drawPolygonPoints(mm, color, False)
+    gfx.restore()
+
+    if player.boost_t > 0:
+        print_log("boost")
+    if player.damage_t > 0:
+        print_log("damage")
+
     gfx.restore()
 
 
 enter_scene(0)
+gameState.countDown = 0
 
 paused = False
 last_tick = 0
@@ -229,9 +297,6 @@ while not done:
             done = True
 
     pressed = pygame.key.get_pressed()
-    if pressed[pygame.K_ESCAPE]:
-        done = True
-
     for k in gameState.trackedKeys:
         hk = gameState.trackedKeys[k]
         gameState.released[hk] = gameState.pressed[hk] == True and pressed[k] == False
@@ -241,19 +306,27 @@ while not done:
         paused = not paused
     if gameState.released["t"]:
         toggleTint()
+    if gameState.released[" "] and gameState.gameOver:
+        enter_scene(0)
 
     if paused:
         continue
 
     if gameState.scene == 0:
         menu_loop(dt)
+        if gameState.released["escape"]:
+            done = True
+
     elif gameState.scene == 1:
+        if gameState.released["escape"]:
+            enter_scene(0)
+            continue
         game_loop(dt)
         render_hud(dt)
 
     row = 0
     for l in log:
-        gfx.drawText(25, 50 + row * 24, l, 1.5, "yellow", 1)
+        gfx.drawText(25, 50 + row * 24, l, 1.5, "cyan", 1)
         row += 1
     log = []
 

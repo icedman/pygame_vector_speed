@@ -27,6 +27,7 @@ class TrackPoint:
     outerCollisionPoints = []
     innerCollisionPoints = []
 
+    segment = None
     nextPoint = None
 
     @staticmethod
@@ -59,12 +60,14 @@ class TrackObject:
     rendered = False
     segment = None
     trackPoint = None
+    entity = None
 
     def __init__(self, segment, trackPoint):
         _ = self
         _.segment = segment
         _.trackPoint = trackPoint
         _.rendered = False
+        _.entity = None
 
 
 class TrackSegment:
@@ -100,6 +103,10 @@ class TrackSegment:
     nextSegment = None
 
     objects = []
+
+    # render hit
+    dark = False
+    pruned = False
 
     def __init__(self):
         _ = self
@@ -415,6 +422,7 @@ class TrackSegment:
             t.innerBorder = Vector.copy(t.innerRail).subtract(borderWidth)
             t.point = Vector.copy(p)
             t.index = index
+            t.segment = _
             index += 1
             _.trackPoints.append(t)
 
@@ -577,7 +585,7 @@ class Track:
             for p in seg.trackPoints:
                 # skip points check as much as possible
                 pdist = p.point.distanceTo(entity.pos)
-                if pdist > seg.trackWidth * 2:
+                if pdist > seg.trackWidth * 3:
                     if isWithin:
                         return None
                     continue
@@ -620,7 +628,16 @@ class Track:
 
         return None
 
-    def addToStartingGrid(self, entity):
+    def attachToTrackPoint(self, entity, tp):
+        entity.track = self
+        entity.segment = tp.segment
+        entity.trackPoint = tp
+        entity.targetPoint = TrackPoint.advance(tp, 4)
+        entity.pos = Vector.copy(tp.point)
+        entity.direction = Vector.copy(tp.direction)
+
+    def attachToStartingGrid(self, entity, offset=0):
         _ = self
-        entity.pos = Vector.copy(_.segments[1].trackPoints[4].point)
-        entity.direction = Vector.copy(_.segments[1].trackPoints[4].direction)
+        segment = _.segments[0]
+        tp = segment.trackPoints[Floor(len(segment.trackPoints) / 3) + offset]
+        self.attachToTrackPoint(entity, tp)

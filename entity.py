@@ -6,6 +6,7 @@ from data.ships import *
 
 class EntityType(Enum):
     ship = 10
+    enemyShip = 11
     particle = 20
     floatingText = 21
     explosion = 22
@@ -34,6 +35,9 @@ class Entity:
     targetPoint = None
     pointIndex = 0
 
+    # marker text
+    marker = None
+
     @property
     def speed(self):
         return self.velocity.length()
@@ -52,8 +56,15 @@ class Entity:
     def create(self):
         return Entity()
 
-    def control(self):
-        return
+    def mark(self, text, offset, ttl):
+        _ = self
+
+        if _.marker == None:
+            _.marker = entityService.createFloatingText(_.pos.x, _.pos.y, "...", self)
+            _.marker.ttl = ttl
+
+        _.marker.text = text
+        _.marker.pos = Vector.copy(_.pos).add(offset)
 
     def update(self, dt):
         _ = self
@@ -68,6 +79,11 @@ class Entity:
         _.velocity = (
             Vector.copy(vn).scale(8).add(_.direction).scale(1 / 9).normalize().scale(s)
         )
+
+    def destroy(self):
+        if self.marker != None:
+            entityService.destroy(self.marker)
+        entityService.destroy(self)
 
 
 class EntityService:
@@ -84,6 +100,7 @@ class EntityService:
         EntityType.powerUp: None,
         EntityType.mines: None,
         EntityType.ship: None,
+        EntityType.enemyShip: None,
         EntityType.explosion: None,
         EntityType.particle: None,
         EntityType.floatingText: None,

@@ -1,6 +1,14 @@
 from maths import *
-from entity import *
 from state import gameState
+from track import *
+from generator import *
+
+from entity import *
+from ship import *
+from particles import *
+from ship import *
+from powerup import *
+from state import *
 
 
 class Game:
@@ -9,8 +17,24 @@ class Game:
         gameState.screenHeight = size[1]
         self.newGame()
 
-    def newGame(self, retainState=False):
-        return
+    def newGame(self, retainState=False, seed=None):
+        if seed != None:
+            random.seed(seed)
+
+        gameState.init()
+        self.clear()
+
+        track = TrackGenerator()
+        track.buildStart()
+        gameState.track = track
+
+        player = entityService.attach(entityService.create(EntityType.ship))
+        gameState.player = player
+
+        track.attachToStartingGrid(player)
+
+        enemy = entityService.attach(entityService.create(EntityType.enemyShip))
+        track.attachToStartingGrid(enemy, 2)
 
     def clear(self):
         entityService.init()
@@ -19,4 +43,11 @@ class Game:
         return
 
     def update(self, dt):
-        return
+        track = gameState.track
+        player = gameState.player
+
+        entityService.update(dt)
+
+        if player.segment != None:
+            track.buildSector(player.segment.sector, 2, 4)
+            track.prune(player.segment.sector, 4)

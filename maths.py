@@ -349,6 +349,9 @@ class Vector:
     def angle(self):
         return Vector(0, 0).angleTo(self)
 
+    def angle360(self):
+        return Vector(0, 0).angleTo360(self)
+
     def angleTo(self, v):
         return angleTo(self.x, self.y, v.x, v.y)
 

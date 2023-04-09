@@ -6,40 +6,26 @@ class GameState:
     tick = 0
 
     screen = {"width": 1024, "height": 768}
-    keys = {
-        "w": False,
-        "a": False,
-        "s": False,
-        "d": False,
-        "left": False,
-        "right": False,
-        "up": False,
-        "down": False,
-        "p": False,
-        " ": False,
-    }
-    last_pressed = []
+    trackedKeys = {}
+    pressed = {}
+    released = {}
     player = None
-    powers = {}
+    track = None
+
+    cam = None
 
     def init(self):
-        self.gameOver = False
-        self.tick = 0
-        self.keys = {
-            "w": False,
-            "a": False,
-            "s": False,
-            "d": False,
-            "left": False,
-            "right": False,
-            "up": False,
-            "down": False,
-            "p": False,
-            " ": False,
-        }
-        self.last_pressed = []
-        self.player = None
-        self.powers = {}
+        _ = self
+        _.gameOver = False
+        _.tick = 0
+        _.pressed = {}
+        _.released = {}
+        _.player = None
+        _.track = None
+        _.cam = None
+        for k in _.trackedKeys:
+            _.pressed[_.trackedKeys[k]] = False
+            _.released[_.trackedKeys[k]] = False
 
 
 gameState = GameState()

@@ -23,6 +23,7 @@ def renderSegment(ctx, segment, dark=False):
     innerBorder = []
 
     t = segment
+    segment.dark = dark
     for j in range(0, 2):
         for i in range(0, len(t.trackPoints)):
             tp = t.trackPoints[i]
@@ -60,6 +61,7 @@ def renderSegment(ctx, segment, dark=False):
                     obj.pos.y,
                 )
                 p.trackObject = obj
+                obj.entity = p
                 p.direction = Vector.copy(obj.trackPoint.direction)
                 entityService.attach(p)
                 # print(obj.trackPoint.index)
@@ -99,6 +101,8 @@ def renderTrack(ctx, segment, entity):
     if entity.segment != None:
         entitySegmentIndex = entity.segment.index
 
+    bucket = []
+
     while t != None:
         dark = False
         dx = entitySegmentIndex - t.index
@@ -116,8 +120,12 @@ def renderTrack(ctx, segment, entity):
         if dist > 8 and entitySegmentIndex < t.index:
             break
 
-        renderSegment(ctx, t, dark)
+        # renderSegment(ctx, t, dark)
+        bucket.insert(0, {"track": t, "dark": dark})
         t = t.nextSegment
+
+    for item in bucket:
+        renderSegment(ctx, item["track"], item["dark"])
 
 
 def renderDebug(ctx, entity):
@@ -168,7 +176,16 @@ def renderFloatingText(ctx, entity):
     ctx.drawText(entity.pos.x, entity.pos.y, entity.text, entity.radius, "red")
 
 
+def renderMines(ctx, entity):
+    renderDefault(ctx, entity)
+
+
 def renderShip(ctx, entity):
+    ctx.saveAttributes()
+
+    if entity.trackPoint != None and entity.trackPoint.segment.dark:
+        ctx.state.forcedColor = "Grey23"
+
     # trail
     points = []
     for i in range(0, len(entity.trail) - 1):
@@ -183,10 +200,8 @@ def renderShip(ctx, entity):
     if len(points) > 2:
         ctx.drawPolygonPoints(points, "red", False)
 
-    ctx.saveAttributes()
     ctx.state.strokeWidth = 3
     renderDefault(ctx, entity)
-    ctx.restore()
 
     if debug["steerAssist"]:
         if entity.trackPoint != None and entity.targetPoint != None:
@@ -195,17 +210,20 @@ def renderShip(ctx, entity):
             ctx.drawPolygon(p2.x, p2.y, 0.25, 12, "cyan")
             ctx.drawLine(p1.x, p1.y, p2.x, p2.y, "cyan")
 
+    ctx.restore()
+
 
 class Renderer:
     defs: dict[EntityType, any] = {
         EntityType.ship: renderShip,
+        EntityType.enemyShip: renderShip,
         EntityType.particle: renderParticle,
         EntityType.explosion: renderDefault,
         EntityType.floatingText: renderFloatingText,
         EntityType.powerUp: renderDefault,
         EntityType.arrow: renderDefault,
         EntityType.speedPad: renderDefault,
-        EntityType.mines: renderDefault,
+        EntityType.mines: renderMines,
     }
 
     @staticmethod

@@ -17,6 +17,7 @@ class Particle(Entity):
 
 class FloatingText(Particle):
     text = ""
+    toEntity = None
 
     def init(self):
         _ = self
@@ -39,12 +40,12 @@ class Explosion(Particle):
         return Explosion()
 
     def update(self, dt):
-        self.radius += 0.05
-        self.radius *= 1.2
+        self.radius += 0.1
         Entity.update(self, dt)
 
 
 def _createParticles(x, y, count, speed=0.05):
+    res = []
     for i in range(0, count):
         v = Vector.fromAngle(Rand(0, 360)).normalize().scale(0.01 + 0.01 * Rnd())
         xx = x + v.x
@@ -54,6 +55,8 @@ def _createParticles(x, y, count, speed=0.05):
         p.direction = d
         p.speed = 0.05
         entityService.attach(p)
+        res.append(p)
+    return res
 
 
 def createExplosion(x, y, count):
@@ -61,21 +64,25 @@ def createExplosion(x, y, count):
         _createParticles(
             x + Rand(-2, 2) * 0.05, y + Rand(-2, 2) * 0.05, Rand(2, 8), 0.25
         )
+    return []
 
 
 def createParticles(x, y, count, type=0):
     if type == 0:
-        _createParticles(x, y, count)
+        return _createParticles(x, y, count)
     elif type == 1:
-        createExplosion(x, y, count)
+        return createExplosion(x, y, count)
+    return []
 
 
-def createFloatingText(x, y, text):
+def createFloatingText(x, y, text, toEntity=None):
     p = entityService.create(EntityType.floatingText, x, y)
     p.text = text
     p.direction = Vector(1, 1)
     p.speed = 0.01
+    p.toEntity = toEntity
     entityService.attach(p)
+    return p
 
 
 entityService.defs[EntityType.particle] = Particle()

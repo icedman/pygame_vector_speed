@@ -31,8 +31,8 @@ class PowerUp(Entity):
         if player != None and player.trackPoint != None:
             d = player.trackPoint.index - _.trackObject.trackPoint.index
             dd = Sqr(d * d)
-            _.visible = dd < 25
-            if _.visible:
+            _.visible = dd < 40
+            if _.visible and not _.active:
                 dist = _.pos.distanceTo(player.pos)
                 if dist < _.radius + player.radius:
                     _.activate()
@@ -67,6 +67,8 @@ class SpeedPad(PowerUp):
 
     def activate(self):
         _ = self
+        _.active = True
+        gameState.player.boost()
 
 
 class Mines(PowerUp):
@@ -80,11 +82,19 @@ class Mines(PowerUp):
 
     def activate(self):
         _ = self
-        entityService.destroy(self)
+        self.destroy()
         entityService.createParticles(_.pos.x, _.pos.y, 3, 1)
         entityService.attach(
             entityService.create(EntityType.explosion, _.pos.x, _.pos.y)
         )
+        gameState.player.damage(75)
+        gameState.player.speed *= 0.5
+
+    def update(self, dt):
+        PowerUp.update(self, dt)
+        _ = self
+        if _.visible:
+            _.mark("mines", Vector(0.8, -0.8), 3500)
 
 
 entityService.defs[EntityType.powerUp] = PowerUp()

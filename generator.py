@@ -46,13 +46,11 @@ class TrackGenerator(Track):
         return f
 
     def buildStart(self):
-        random.seed(777)
-
         self.segments = []
         seg = TrackSegment.randomLineSegment()
         seg.baseAngle = -65 + 360
         seg.trackWidth = 1.5
-        seg.length = 4
+        seg.length = 16
         self.addSector([seg, TrackSegment.randomLineSegment()])
         self.addSector(self.randomSector(0))
 
@@ -67,6 +65,10 @@ class TrackGenerator(Track):
     def prune(self, sector, distance):
         first = self.segments[0]
         if sector - first.sector > distance:
+            for o in self.segments[0].objects:
+                if o.entity != None:
+                    o.entity.destroy()
+            self.segments[0].pruned = True
             del self.segments[0]
 
     def randomFeature(self, type):
@@ -112,7 +114,8 @@ class TrackGenerator(Track):
 
     def decorateSegment(self, segment):
         targetCount = len(segment.trackPoints)
-        for p in segment.trackPoints:
+        for pi in range(1, len(segment.trackPoints) - 1):
+            p = segment.trackPoints[pi]
             if len(segment.objects) >= targetCount:
                 break
 
@@ -126,21 +129,49 @@ class TrackGenerator(Track):
 
                 rnd = Rand(0, 100)
 
-                speed_pad_chances = 15
+                chance = 5
                 if segment.sector + 1 > 3:
-                    speed_pad_chances += 5
+                    chance += 5
                 if segment.sector + 1 > 7:
-                    speed_pad_chances += 10
+                    chance += 5
                 if segment.sector + 1 > 10:
-                    speed_pad_chances += 15
-                if rnd < speed_pad_chances:
+                    chance += 10
+                if rnd < chance:
                     obj.type = TrackObjectType.SPEEDPAD
-                elif Rand(0, 100) < 20:
+                elif Rand(0, 100) < 40:
                     obj.type = TrackObjectType.POWERUP
 
                 segment.objects.append(obj)
-                if (Rand(0, 100)) < 20:
-                    where = Rand(0, 100) % 3
+
+                if obj.type != TrackObjectType.ARROW:
+                    if (Rand(0, 100)) < 20:
+                        where = Rand(0, 100) % 3
+                        if where == 0:
+                            obj.pos.add(offsetLeft)
+                        elif where == 1:
+                            obj.pos.add(offsetRight)
+
+            if (Rand(0, 100)) < 10:
+                rnd = Rand(0, 100)
+
+                chance = 5
+                if segment.sector + 1 > 3:
+                    chance += 5
+                if segment.sector + 1 > 7:
+                    chance += 5
+                if segment.sector + 1 > 10:
+                    chance += 10
+                if rnd < chance:
+                    where = -1
+                    if (Rand(0, 100)) < 20:
+                        if Rand(0, 100) % 3:
+                            where = 0
+                        else:
+                            where = 1
+                    obj = TrackObject(segment, p)
+                    obj.pos = Vector.copy(p.point)
+                    obj.type = TrackObjectType.MINES
+                    segment.objects.append(obj)
                     if where == 0:
                         obj.pos.add(offsetLeft)
                     elif where == 1:

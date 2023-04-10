@@ -208,7 +208,7 @@ def renderShip(ctx, entity):
     if len(points) > 2:
         ctx.drawPolygonPoints(points, RndOr("red", "orange"), False)
 
-    ctx.state.strokeWidth = 1.5
+    ctx.state.strokeWidth = 2
     renderDefault(ctx, entity)
 
     if debug["steerAssist"]:

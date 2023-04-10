@@ -262,12 +262,14 @@ colors["Gray"] = colors["Grey62"]
 colors["DarkGray"] = colors["Grey62"]
 colors["Indigo"] = colors["Purple"]
 
+
 def dot(r, g, b, rr, gg, bb):
     return (rr * r) + (gg * g) + (bb * b)
 
 
 def mix(a, b, p):
     return a * p + b * (1 - p)
+
 
 def isDark(r, g, b):
     luma = 0.2126 * r + 0.7152 * g + 0.0722 * b

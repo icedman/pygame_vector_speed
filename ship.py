@@ -4,6 +4,7 @@ from maths import *
 from state import *
 from sounds import *
 
+
 class Ship(Entity):
     track = None
     steer = 0
@@ -332,13 +333,15 @@ class EnemyShip(Ship):
         if dist == None:
             return
 
+        wait = False
+
         # slow down way ahead
         if dist > 60 and _.trackPoint.index > player.trackPoint.index:
-            _.speed = 0
+            wait = True
 
         # slow down if nearing last segment
         if dist > 10 and _.segment == _.track.segments[len(_.track.segments) - 1]:
-            _.speed = 0
+            wait = True
 
         # catch up when pruned
         if _.segment == None or _.segment.pruned == True:
@@ -348,6 +351,9 @@ class EnemyShip(Ship):
         # catch up
         if dist > 60 and _.trackPoint.index < player.trackPoint.index:
             _.trackPoint = TrackPoint.advance(_.trackPoint, 20)
+
+        if wait:
+            return
 
         Ship.update(self, dt)
 

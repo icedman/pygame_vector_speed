@@ -7,6 +7,7 @@ from track import *
 from generator import *
 from colors import tint, untint
 from sounds import *
+from data.ui import *
 
 pygame.init()
 
@@ -21,6 +22,8 @@ soundService.defs[Effects.powerup] = pygame.mixer.Sound(
     "./sounds/jalastram/powerup.mp3"
 )
 soundService.defs[Effects.explosion] = pygame.mixer.Sound("./sounds/draven/bomb.wav")
+pygame.mixer.music.load("./sounds/f16-fighter-jet-start-upaif-14690.mp3")
+pygame.mixer.music.set_volume(0)
 
 for d in soundService.defs:
     soundService.defs[d].set_volume(0.25)
@@ -42,41 +45,6 @@ gameState.trackedKeys = {
 gameState.init()
 
 game = Game()
-def generate_meter(x, y):
-    t = TrackGenerator()
-    t.addSector([
-        TrackSegment.randomArcSegment(),
-        TrackSegment.randomLineSegment(),
-    ])
-    t.segments[0].segmentType = TrackSegmentType.ARC_LEFT
-    t.segments[0].baseAngle = -45
-    t.segments[0].arc = 45
-    t.segments[0].radius = 0.1
-    t.segments[0].startRadius = 0.1
-    t.segments[0].endRadius = 0.08
-    t.segments[1].length = 8
-    t.compute(0)
-
-    res = []
-    m = Matrix.identity().scale(20, 20, 1)
-    m.multiply(Matrix.identity().translate(x, y, 0))
-    tp = t.segments[0].trackPoints[0]
-    while tp != None:
-        v = Vector.copy(tp.point).transform(m)
-        res.append([v.x, v.y])
-        nextTp = TrackPoint.advance(tp, 1)
-        if nextTp == tp:
-            break
-        tp = nextTp
-
-    return res
-
-meter = generate_meter(0, 0)
-
-# tint(0, 255, 0, 0.6)
-# gameState.tinted = True
-
-# tint(255, 0, 0, 0.6)
 
 # size = [1600, 900]
 size = [1280, 800]
@@ -112,6 +80,9 @@ def enter_scene(scn):
         gameState.countDown = 2000
         gameState.player.ai = True
         gameState.player.indestructible = True
+        others = gameState.player.otherShips()
+        for o in others:
+            entityService.destroy(o)
     elif gameState.scene == 1:
         game.newGame(777)
 
@@ -220,6 +191,8 @@ def render_hud(dt):
         if c <= 3:
             if c == 0:
                 cs = "GO"
+                if gameState.countDown % 2 == 0:
+                    soundService.play(Effects.countDown)
             gfx.state.strokeWidth = 6
             pos = [size[0] / 2, size[1] / 2]
             gfx.drawText(pos[0], pos[1], cs, 6, "yellow")
@@ -266,12 +239,12 @@ def render_hud(dt):
     gfx.save()
     gfx.state.strokeWidth = 8
     # speed
-    pos = [size[0]-240, size[1]-30]
+    pos = [size[0] - 240, size[1] - 30]
     gfx.translate(pos[0], pos[1])
     gfx.drawPolygonPoints(meter, "white", False)
     sp = gameState.player.speed / gameState.player.max_speed
     mm = []
-    for i in range(0, Floor(l*sp)):
+    for i in range(0, Floor(l * sp)):
         mm.append(meter[i])
     gfx.drawPolygonPoints(mm, "cyan", False)
     # shield
@@ -280,14 +253,14 @@ def render_hud(dt):
     gfx.drawPolygonPoints(meter, "white", False)
     sp = gameState.player.shield / gameState.player.max_shield
     color = "green"
-    if sp < 0.1:
+    if sp < 0.3:
         color = "red"
         if gameState.player.shield <= 0:
             print_log("ship disabled")
         else:
-            print_log("warning")
+            print_log("critical")
     mm = []
-    for i in range(0, Floor(l*sp)):
+    for i in range(0, Floor(l * sp)):
         mm.append(meter[i])
     gfx.drawPolygonPoints(mm, color, False)
     gfx.restore()
@@ -352,10 +325,23 @@ while not done:
 
     pygame.display.flip()
 
+    # sound effects
     for r in soundService.requests:
         cnt = soundService.requests[r]
         del soundService.requests[r]
         snd = soundService.defs[r]
-        pygame.mixer.Sound.stop(snd)
-        pygame.mixer.Sound.play(snd)
+        if gameState.scene == 1:
+            pygame.mixer.Sound.stop(snd)
+            pygame.mixer.Sound.play(snd)
         break
+
+    if gameState.scene == 1:
+        v = gameState.player.speed
+        if v > 1:
+            v = 1
+        pygame.mixer.music.set_volume(v)
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play(-1)
+    else:
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()

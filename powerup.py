@@ -3,6 +3,7 @@ from data.objects import *
 from state import *
 from sounds import *
 
+
 class PowerUp(Entity):
     active = True
     trackObject = None
@@ -28,24 +29,29 @@ class PowerUp(Entity):
         Entity.update(self, dt)
 
         player = gameState.player
-        if player != None and player.trackPoint != None:
-            d = player.trackPoint.index - _.trackObject.trackPoint.index
-            dd = Sqr(d * d)
-            _.visible = dd < 50
-            if _.visible and not _.active:
-                dist = _.pos.distanceTo(player.pos)
-                if dist < _.radius + player.radius:
-                    _.activate()
+        for et in entityService.entities:
+            for e in entityService.entities[et]:
+                if e.trackPoint != None:
+                    # activate power for enemies only if player is visible ;)
+                    if player != None and e != player and e.distanceTo(player) > 10:
+                        continue
+                    d = e.trackPoint.index - _.trackObject.trackPoint.index
+                    dd = Sqr(d * d)
+                    _.visible = dd < 50
+                    if _.visible and not _.active:
+                        dist = _.pos.distanceTo(e.pos)
+                        if dist < _.radius + e.radius:
+                            _.activate(e)
 
-    def activate(self):
+    def activate(self, target):
         _ = self
         entityService.destroy(self)
+        # todo random power ups
         entityService.createFloatingText(_.pos.x, _.pos.y, "+shield")
-        gameState.player.shield += 100
+        target.shield += 100
         soundService.play(Effects.powerup)
-        if gameState.player.shield > gameState.player.max_shield:
-            gameState.player.max_shield = gameState.player.shield
-
+        if target.shield > target.max_shield:
+            target.max_shield = target.shield
 
 
 class Arrow(PowerUp):
@@ -57,7 +63,7 @@ class Arrow(PowerUp):
     def create(self):
         return Arrow()
 
-    def activate(self):
+    def activate(self, target):
         _ = self
 
 
@@ -70,10 +76,10 @@ class SpeedPad(PowerUp):
     def create(self):
         return SpeedPad()
 
-    def activate(self):
+    def activate(self, target):
         _ = self
         _.active = True
-        gameState.player.boost()
+        target.boost()
         soundService.play(Effects.speedpad)
 
 
@@ -86,7 +92,7 @@ class Mines(PowerUp):
     def create(self):
         return Mines()
 
-    def activate(self):
+    def activate(self, target):
         _ = self
         self.destroy()
         entityService.createParticles(_.pos.x, _.pos.y, 3, 1)
@@ -94,8 +100,8 @@ class Mines(PowerUp):
             entityService.create(EntityType.explosion, _.pos.x, _.pos.y)
         )
         entityService.createFloatingText(_.pos.x, _.pos.y, "mines!!!").color = "white"
-        gameState.player.damage(75)
-        gameState.player.speed *= 0.5
+        target.damage(75)
+        target.speed *= 0.5
         soundService.play(Effects.mines)
 
     # def update(self, dt):
@@ -103,6 +109,16 @@ class Mines(PowerUp):
     #     _ = self
     #     if _.visible:
     #         _.mark("mines", Vector(0.8, -0.8), 3500)
+
+
+class Shot(Entity):
+    def init(self):
+        PowerUp.init(self)
+        _ = self
+        _.shape = objects["objects"]["mines"]
+
+    def create(self):
+        return Shot()
 
 
 entityService.defs[EntityType.powerUp] = PowerUp()

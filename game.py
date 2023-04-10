@@ -54,7 +54,7 @@ class Game:
 
         if gameState.gameOver != True:
             gameState.tick += dt
-            
+
         track = gameState.track
         player = gameState.player
 

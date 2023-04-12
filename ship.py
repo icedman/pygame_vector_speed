@@ -30,6 +30,7 @@ class Ship(Entity):
 
     def init(self):
         _ = self
+        _.type = EntityType.ship
         _.shape = ships["objects"]["ship_3"]
         _.steer = 0
         _.throttle = 0
@@ -180,16 +181,16 @@ class Ship(Entity):
                 _.pos.add(v)
 
                 # off track net
-                if _.last_valid_point != None:
-                    dist = _.last_valid_point.point.distanceTo(_.pos)
-                    if dist > _.last_valid_point.segment.trackWidth * 1.5:
-                        pull = (
-                            Vector.copy(_.last_valid_point.point)
-                            .subtract(_.pos)
-                            .normalize()
-                            .scale(dist * 0.5)
-                        )
-                        _.pos.add(pull)
+                # if _.last_valid_point != None:
+                #     dist = _.last_valid_point.point.distanceTo(_.pos)
+                #     if dist > _.last_valid_point.segment.trackWidth * 1.5:
+                #         pull = (
+                #             Vector.copy(_.last_valid_point.point)
+                #             .subtract(_.pos)
+                #             .normalize()
+                #             .scale(dist * 0.5)
+                #         )
+                #         _.pos.add(pull)
 
                 col = _.track.detectCollision(self)
                 if col != None:

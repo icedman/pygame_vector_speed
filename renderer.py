@@ -5,8 +5,6 @@ from data.ships import *
 from data.objects import *
 from track import *
 
-debug = {"entityVectors": False, "steerAssist": False, "collisionPoints": False}
-
 
 def renderSegment(ctx, segment, dark=False, flags=None):
     ctx.saveAttributes()
@@ -22,6 +20,7 @@ def renderSegment(ctx, segment, dark=False, flags=None):
         "rail": True,
         "border": True,
         "objects": True,
+        "collisionPoints": False,
     }
     if flags != None:
         for f in flags:
@@ -51,7 +50,7 @@ def renderSegment(ctx, segment, dark=False, flags=None):
                 innerBorder.append([tp.innerBorder.x, tp.innerBorder.y])
 
                 # debug collision points
-                if debug["collisionPoints"]:
+                if opts["collisionPoints"]:
                     for c in tp.outerCollisionPoints:
                         # ctx.drawPolygon(c.x, c.y, 0.25, 12, "red")
                         x = Vector.copy(c).add(Vector.copy(tp.sideDir).scale(-0.25))
@@ -117,7 +116,7 @@ def renderSegment(ctx, segment, dark=False, flags=None):
     ctx.restore()
 
 
-def renderTrack(ctx, segment, entity):
+def renderTrack(ctx, segment, entity, opts=None):
     t = segment
 
     entitySegmentIndex = 0
@@ -148,10 +147,14 @@ def renderTrack(ctx, segment, entity):
         t = t.nextSegment
 
     for item in bucket:
-        renderSegment(ctx, item["track"], item["dark"])
+        renderSegment(ctx, item["track"], item["dark"], opts)
 
 
-def renderDebug(ctx, entity):
+def renderDebug(
+    ctx,
+    entity,
+    debug,
+):
     if debug["entityVectors"]:
         ctx.drawPolygon(entity.pos.x, entity.pos.y, entity.radius, 12, "red")
         d = Vector.copy(entity.pos).add(
@@ -164,7 +167,7 @@ def renderDebug(ctx, entity):
         ctx.drawLine(entity.pos.x, entity.pos.y, d.x, d.y, "cyan")
 
 
-def renderDefault(ctx, entity):
+def renderDefault(ctx, entity, opts=None):
     if not entity.visible:
         return
 
@@ -188,22 +191,22 @@ def renderDefault(ctx, entity):
         )
 
 
-def renderParticle(ctx, entity):
+def renderParticle(ctx, entity, opts=None):
     v = Vector.copy(entity.pos).add(
         Vector.copy(entity.direction).scale(-entity.radius * entity.speed)
     )
     ctx.drawLine(entity.pos.x, entity.pos.y, v.x, v.y, RndOr("red", "orange"))
 
 
-def renderFloatingText(ctx, entity):
+def renderFloatingText(ctx, entity, opts=None):
     ctx.drawText(entity.pos.x, entity.pos.y, entity.text, entity.radius, entity.color)
 
 
-def renderMines(ctx, entity):
+def renderMines(ctx, entity, opts=None):
     renderDefault(ctx, entity)
 
 
-def renderShip(ctx, entity):
+def renderShip(ctx, entity, opts=None):
     ctx.saveAttributes()
 
     if entity.trackPoint != None and entity.trackPoint.segment.dark:
@@ -230,17 +233,23 @@ def renderShip(ctx, entity):
         ctx.drawPolygonPoints(points, RndOr("red", "orange"), False)
 
     ctx.state.strokeWidth = 2
-    renderDefault(ctx, entity)
+    renderDefault(ctx, entity, opts)
 
-    if debug["steerAssist"]:
+    if opts != None and "steerAssist" in opts and opts["steerAssist"] == True:
         if entity.trackPoint != None and entity.targetPoint != None:
             p1 = Vector.copy(entity.trackPoint.point)
             p2 = Vector.copy(entity.targetPoint.point)
-            ctx.drawPolygon(p2.x, p2.y, 0.25, 12, "cyan")
+            ctx.drawPolygon(p2.x, p2.y, 0.15, 12, "cyan")
             ctx.drawLine(p1.x, p1.y, p2.x, p2.y, "cyan")
 
-    # if entity.last_valid_point != None:
-    # ctx.drawLine(entity.pos.x, entity.pos.y, entity.last_valid_point.point.x, entity.last_valid_point.point.y, "cyan")
+        # if entity.last_valid_point != None:
+        #     ctx.drawLine(
+        #         entity.pos.x,
+        #         entity.pos.y,
+        #         entity.last_valid_point.point.x,
+        #         entity.last_valid_point.point.y,
+        #         "cyan",
+        #     )
 
     ctx.restore()
 
@@ -259,7 +268,17 @@ class Renderer:
     }
 
     @staticmethod
-    def renderEntity(ctx: Context, e: Entity):
+    def renderEntity(ctx: Context, e: Entity, debug=None):
         r = Renderer.defs[e.type]
-        r(ctx, e)
-        renderDebug(ctx, e)
+
+        _debug = {
+            "entityVectors": False,
+            "steerAssist": False,
+            "collisionPoints": False,
+        }
+        if debug != None:
+            for d in debug:
+                _debug[d] = debug[d]
+
+        r(ctx, e, _debug)
+        renderDebug(ctx, e, _debug)

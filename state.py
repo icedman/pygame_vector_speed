@@ -1,4 +1,6 @@
 class GameState:
+    done = False
+    paused = False
     scene = 0
     screenWidth = 0
     screenHeight = 0

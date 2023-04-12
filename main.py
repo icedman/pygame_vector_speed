@@ -4,10 +4,12 @@ from draw import Context
 from renderer import *
 from game import *
 from track import *
-from generator import *
 from colors import tint, untint
 from sounds import *
 from data.ui import *
+from scene import *
+from demo import *
+
 
 pygame.init()
 
@@ -39,20 +41,20 @@ gameState.trackedKeys = {
     pygame.K_a: "a",
     pygame.K_s: "s",
     pygame.K_d: "d",
-    pygame.K_p: "p",
-    pygame.K_t: "t",
+    pygame.K_p: "p",  # pause
+    pygame.K_t: "t",  # toggle sound
+    pygame.K_o: "o",  # demo
 }
 gameState.init()
-
-game = Game()
 
 # size = [1600, 900]
 size = [1280, 800]
 screen = pygame.display.set_mode(size)
-done = False
 gfx = Context(screen)
 gfx.state.strokeWidth = 1
 
+game = Game()
+game.setup(size)
 log = []
 
 
@@ -73,20 +75,6 @@ def cull(v1, v2):
 gfx.cull = cull
 
 
-def enter_scene(scn):
-    gameState.scene = scn
-    if gameState.scene == 0:
-        game.newGame(888)
-        gameState.countDown = 2000
-        gameState.player.ai = True
-        gameState.player.indestructible = True
-        others = gameState.player.otherShips()
-        for o in others:
-            entityService.destroy(o)
-    elif gameState.scene == 1:
-        game.newGame(777)
-
-
 def toggleTint():
     gameState.tinted = not gameState.tinted
     if gameState.tinted:
@@ -95,82 +83,7 @@ def toggleTint():
         untint()
 
 
-def game_loop(dt):
-    player = gameState.player
-    track = gameState.track
-
-    pressed = gameState.pressed
-    if pressed["left"] or pressed["a"]:
-        player.steerLeft()
-    if pressed["right"] or pressed["d"]:
-        player.steerRight()
-    if pressed["up"] or pressed["w"]:
-        player.throttleUp()
-    if pressed["down"] or pressed["s"]:
-        player.throttleDown()
-
-    game.update(dt)
-
-    gfx.clear("black")
-    gfx.save()
-
-    # camera
-    scale = 90 - (50 * player.speed / 1)
-    gfx.scale(scale, scale)
-    cam = gfx.transform(
-        Vector.copy(player.pos).add(
-            Vector.copy(player.direction).scale(
-                player.radius * 3 + (player.radius * player.speed)
-            )
-        )
-    )
-    if gameState.cam != None:
-        cam.scale(4).add(gameState.cam).scale(1 / 5)
-    gameState.cam = Vector.copy(cam)
-    gfx.translate(size[0] / 2 - cam.x, size[1] / 2 - cam.y)
-
-    renderTrack(gfx, track.segments[0], gameState.player)
-
-    for t in entityService.entities:
-        for e in entityService.entities[t]:
-            Renderer.renderEntity(gfx, e)
-
-    gfx.restore()
-
-
-def menu_loop(dt):
-    if gameState.released[" "]:
-        enter_scene(1)
-
-    gfx.clear("black")
-    gfx.saveAttributes()
-    gfx.state.forcedColor = "Grey23"
-    game_loop(dt)
-    gfx.restore()
-
-    gfx.drawRect(0, 0, size[0], size[1], "red")
-    gfx.save()
-
-    gfx.saveAttributes()
-    gfx.state.strokeWidth = 4
-    gfx.drawText(size[0] / 2, size[1] / 2, "Vector Speed AG", 4, "yellow")
-    gfx.restore()
-    gfx.drawText(size[0] / 2, size[1] / 2 + 150, "Press SPACE to play", 1.5, "red")
-    gfx.drawText(
-        size[0] / 2, size[1] / 2 + 150 + 30, "Press T to toggle colors", 1, "red"
-    )
-    gfx.drawText(
-        size[0] / 2, size[1] - 120 + 0, "A, D, Left, Right to steer", 1, "white"
-    )
-    gfx.drawText(
-        size[0] / 2, size[1] - 120 + 25, "W, S, Up, Down to control speed", 1, "white"
-    )
-    # gfx.drawText(size[0] / 2, size[1] - 120 + 50, "Space to explode bomb", 1, "white")
-
-    gfx.restore()
-
-
-def render_hud(dt):
+def render_hud():
     player = gameState.player
     track = gameState.track
 
@@ -273,12 +186,153 @@ def render_hud(dt):
     gfx.restore()
 
 
-enter_scene(0)
-gameState.countDown = 0
+class GameScene(Scene):
+    type = SceneType.game
+    showHud = True
 
-paused = False
+    def onEnter(self):
+        game.newGame(777)
+        game.addOtherShips()
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play(-1)
+
+    def onExit(self):
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.stop()
+
+    def onUpdate(self, dt):
+        player = gameState.player
+        track = gameState.track
+
+        pressed = gameState.pressed
+        if pressed["left"] or pressed["a"]:
+            player.steerLeft()
+        if pressed["right"] or pressed["d"]:
+            player.steerRight()
+        if pressed["up"] or pressed["w"]:
+            player.throttleUp()
+        if pressed["down"] or pressed["s"]:
+            player.throttleDown()
+
+        if gameState.released["escape"]:
+            sceneService.enterScene(SceneType.menu)
+            return
+        if gameState.released[" "] and gameState.gameOver:
+            sceneService.enterScene(SceneType.menu)
+            return
+
+        game.update(dt)
+
+        # sound effects
+        for r in soundService.requests:
+            cnt = soundService.requests[r]
+            del soundService.requests[r]
+            snd = soundService.defs[r]
+            pygame.mixer.Sound.stop(snd)
+            pygame.mixer.Sound.play(snd)
+            break
+
+        # music
+        v = gameState.player.speed
+        if v > 1:
+            v = 1
+        pygame.mixer.music.set_volume(v)
+
+    def onRender(self, gfx):
+        player = gameState.player
+        track = gameState.track
+
+        gfx.clear("black")
+        gfx.save()
+
+        # camera
+        scale = 90 - (50 * player.speed / 1)
+        gfx.scale(scale, scale)
+        cam = gfx.transform(
+            Vector.copy(player.pos).add(
+                Vector.copy(player.direction).scale(
+                    player.radius * 3 + (player.radius * player.speed)
+                )
+            )
+        )
+        if gameState.cam != None:
+            cam.scale(4).add(gameState.cam).scale(1 / 5)
+        gameState.cam = Vector.copy(cam)
+        gfx.translate(size[0] / 2 - cam.x, size[1] / 2 - cam.y)
+
+        renderTrack(gfx, track.segments[0], gameState.player)
+
+        for t in entityService.entities:
+            for e in entityService.entities[t]:
+                Renderer.renderEntity(gfx, e)
+
+        gfx.restore()
+
+        if self.showHud:
+            render_hud()
+
+
+class MenuScene(GameScene):
+    type = SceneType.menu
+
+    def onEnter(self):
+        self.showHud = False
+        game.newGame(888)
+        gameState.countDown = 2000
+        gameState.player.ai = True
+        gameState.player.indestructible = True
+
+    def onUpdate(self, dt):
+        if gameState.released[" "]:
+            sceneService.enterScene(SceneType.game)
+            return
+        if gameState.released["escape"]:
+            gameState.done = True
+            return
+
+        game.update(dt)
+
+    def onRender(self, gfx):
+        player = gameState.player
+        track = gameState.track
+
+        gfx.saveAttributes()
+        gfx.state.forcedColor = "Grey23"
+        GameScene.onRender(self, gfx)
+        gfx.restore()
+
+        gfx.drawRect(0, 0, size[0], size[1], "red")
+        gfx.save()
+
+        gfx.saveAttributes()
+        gfx.state.strokeWidth = 4
+        gfx.drawText(size[0] / 2, size[1] / 2, "Vector Speed AG", 4, "yellow")
+        gfx.restore()
+        gfx.drawText(size[0] / 2, size[1] / 2 + 150, "Press SPACE to play", 1.5, "red")
+        gfx.drawText(
+            size[0] / 2, size[1] / 2 + 150 + 30, "Press T to toggle colors", 1, "red"
+        )
+        gfx.drawText(
+            size[0] / 2, size[1] - 120 + 0, "A, D, Left, Right to steer", 1, "white"
+        )
+        gfx.drawText(
+            size[0] / 2,
+            size[1] - 120 + 25,
+            "W, S, Up, Down to control speed",
+            1,
+            "white",
+        )
+
+        gfx.restore()
+
+
+sceneService.defs[SceneType.menu] = MenuScene()
+sceneService.defs[SceneType.game] = GameScene()
+sceneService.defs[SceneType.demo] = DemoScene()
+sceneService.enterScene(SceneType.menu)
+
 last_tick = 0
-while not done:
+while not gameState.done:
     tick = pygame.time.get_ticks()
     dt = tick - last_tick
     if dt < 16:
@@ -287,7 +341,7 @@ while not done:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            done = True
+            gameState.done = True
 
     pressed = pygame.key.get_pressed()
     for k in gameState.trackedKeys:
@@ -296,26 +350,16 @@ while not done:
         gameState.pressed[hk] = pressed[k]
 
     if gameState.released["p"]:
-        paused = not paused
+        gameState.paused = not gameState.paused
+    if gameState.paused:
+        continue
     if gameState.released["t"]:
         toggleTint()
-    if gameState.released[" "] and gameState.gameOver:
-        enter_scene(0)
+    if gameState.released["o"]:
+        sceneService.enterScene(SceneType.demo)
 
-    if paused:
-        continue
-
-    if gameState.scene == 0:
-        menu_loop(dt)
-        if gameState.released["escape"]:
-            done = True
-
-    elif gameState.scene == 1:
-        if gameState.released["escape"]:
-            enter_scene(0)
-            continue
-        game_loop(dt)
-        render_hud(dt)
+    sceneService.current.onUpdate(dt)
+    sceneService.current.onRender(gfx)
 
     row = 0
     for l in log:
@@ -324,24 +368,3 @@ while not done:
     log = []
 
     pygame.display.flip()
-
-    # sound effects
-    for r in soundService.requests:
-        cnt = soundService.requests[r]
-        del soundService.requests[r]
-        snd = soundService.defs[r]
-        if gameState.scene == 1:
-            pygame.mixer.Sound.stop(snd)
-            pygame.mixer.Sound.play(snd)
-        break
-
-    if gameState.scene == 1:
-        v = gameState.player.speed
-        if v > 1:
-            v = 1
-        pygame.mixer.music.set_volume(v)
-        if not pygame.mixer.music.get_busy():
-            pygame.mixer.music.play(-1)
-    else:
-        if pygame.mixer.music.get_busy():
-            pygame.mixer.music.stop()

@@ -8,7 +8,7 @@ from track import *
 debug = {"entityVectors": False, "steerAssist": False, "collisionPoints": False}
 
 
-def renderSegment(ctx, segment, dark=False):
+def renderSegment(ctx, segment, dark=False, objects=True):
     ctx.saveAttributes()
     ctx.state.strokeWidth = 1
     if dark:
@@ -52,19 +52,20 @@ def renderSegment(ctx, segment, dark=False):
                 break
 
         # attach track objects
-        for obj in t.objects:
-            if obj.rendered == False:
-                obj.rendered = True
-                p = entityService.create(
-                    EntityType(EntityType.powerUp.value + obj.type.value),
-                    obj.pos.x,
-                    obj.pos.y,
-                )
-                p.trackObject = obj
-                obj.entity = p
-                p.direction = Vector.copy(obj.trackPoint.direction)
-                entityService.attach(p)
-                # print(obj.trackPoint.index)
+        if objects:
+            for obj in t.objects:
+                if obj.rendered == False:
+                    obj.rendered = True
+                    p = entityService.create(
+                        EntityType(EntityType.powerUp.value + obj.type.value),
+                        obj.pos.x,
+                        obj.pos.y,
+                    )
+                    p.trackObject = obj
+                    obj.entity = p
+                    p.direction = Vector.copy(obj.trackPoint.direction)
+                    entityService.attach(p)
+                    # print(obj.trackPoint.index)
 
         t = t.nextSegment
         if t == None:

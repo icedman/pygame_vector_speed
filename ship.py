@@ -56,8 +56,9 @@ class Ship(Entity):
 
     def damage(self, amount=50):
         _ = self
-        if _.indestructible:
+        if _.indestructible or _.shield <= 0:
             return
+
         _.shield -= amount
         _.damage_t = 500
 

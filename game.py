@@ -33,6 +33,9 @@ class Game:
 
         track.attachToStartingGrid(player)
 
+    def addOtherShips(self):
+        track = gameState.track
+
         enemy1 = entityService.attach(entityService.create(EntityType.enemyShip))
         enemy1.setGraphics("ship_2")
         track.attachToStartingGrid(enemy1, 2)

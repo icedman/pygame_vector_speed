@@ -79,6 +79,7 @@ class SpeedPad(PowerUp):
     def activate(self, target):
         _ = self
         _.active = True
+        _.shape = objects["objects"]["_speed_pad_activated"]
         target.boost()
         soundService.play(Effects.speedpad)
 

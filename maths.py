@@ -349,17 +349,17 @@ class Vector:
     def angle(self):
         return Vector(0, 0).angleTo(self)
 
-    def angle360(self):
-        return Vector(0, 0).angleTo360(self)
+    # def angle360(self):
+    #     return Vector(0, 0).angleTo360(self)
 
     def angleTo(self, v):
         return angleTo(self.x, self.y, v.x, v.y)
 
-    def angleTo360(self, t):
-        f = self
-        right = Vector.right()
-        angle = f.angleTo(t)
-        return 360 - angle if (right.angleTo(t)) > 90 else angle
+    # def angleTo360(self, t):
+    #     f = self
+    #     right = Vector.right()
+    #     angle = f.angleTo(t)
+    #     return 360 - angle if (right.angleTo(t)) > 90 else angle
 
     def distanceTo(self, v):
         vc = Vector.copy(v)

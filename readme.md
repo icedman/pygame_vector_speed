@@ -36,3 +36,9 @@ pip install pygame
 ```sh
 python ./main.py
 ```
+
+Run in monochrome color
+
+```sh
+python ./main.py -t
+```

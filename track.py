@@ -596,6 +596,12 @@ class Track:
                     entity.trackPoint = p
                     nearestDistance = pdist
 
+                    if (
+                        entity.last_valid_point == None
+                        or p.index > entity.last_valid_point.index
+                    ):
+                        entity.last_valid_point = p
+
                 if pointIndex > 10:
                     return None
 
@@ -615,6 +621,9 @@ class Track:
                             )
                             if dist == 0:
                                 return None
+
+                            # return None
+
                             return {
                                 "segment": seg,
                                 "force": dist,

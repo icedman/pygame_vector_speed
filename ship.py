@@ -18,6 +18,8 @@ class Ship(Entity):
     damage_t = 0
     collide_t = 0
 
+    last_valid_point = None
+
     # parameters
     max_speed = 0.8
     max_shield = 10000
@@ -176,6 +178,19 @@ class Ship(Entity):
             for i in range(0, pre):
                 v = Vector.copy(vn).scale(((s + boostSpeed) * 20) / 1000 * dt / pre)
                 _.pos.add(v)
+
+                # off track net
+                if _.last_valid_point != None:
+                    dist = _.last_valid_point.point.distanceTo(_.pos)
+                    if dist > _.last_valid_point.segment.trackWidth * 1.5:
+                        pull = (
+                            Vector.copy(_.last_valid_point.point)
+                            .subtract(_.pos)
+                            .normalize()
+                            .scale(dist * 0.5)
+                        )
+                        _.pos.add(pull)
+
                 col = _.track.detectCollision(self)
                 if col != None:
                     _.collide_t = 200

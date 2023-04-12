@@ -1,4 +1,6 @@
 import pygame
+import sys
+
 from maths import *
 from draw import Context
 from renderer import *
@@ -330,6 +332,10 @@ sceneService.defs[SceneType.menu] = MenuScene()
 sceneService.defs[SceneType.game] = GameScene()
 sceneService.defs[SceneType.demo] = DemoScene()
 sceneService.enterScene(SceneType.menu)
+
+for arg in sys.argv:
+    if arg.startswith("-"):
+        gameState.pressed[arg[1:]] = True
 
 last_tick = 0
 while not gameState.done:

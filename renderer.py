@@ -8,11 +8,24 @@ from track import *
 debug = {"entityVectors": False, "steerAssist": False, "collisionPoints": False}
 
 
-def renderSegment(ctx, segment, dark=False, objects=True):
+def renderSegment(ctx, segment, dark=False, flags=None):
     ctx.saveAttributes()
     ctx.state.strokeWidth = 1
     if dark:
         ctx.state.forcedColor = "Grey23"
+
+    opts = {
+        "line": False,
+        "track": True,
+        "section_track": True,
+        "section_rail": True,
+        "rail": True,
+        "border": True,
+        "objects": True,
+    }
+    if flags != None:
+        for f in flags:
+            opts[f] = flags[f]
 
     points = []
     outerTrack = []
@@ -71,28 +84,35 @@ def renderSegment(ctx, segment, dark=False, objects=True):
         if t == None:
             break
 
-    for i in range(0, len(outerTrack) - 1):
-        p1 = outerTrack[i]
-        p2 = innerTrack[i]
-        v1 = Vector(p1[0], p1[1])
-        v2 = Vector(p2[0], p2[1])
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
+    if opts["section_track"]:
+        for i in range(0, len(outerTrack) - 1):
+            p1 = outerTrack[i]
+            p2 = innerTrack[i]
+            v1 = Vector(p1[0], p1[1])
+            v2 = Vector(p2[0], p2[1])
+            ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
 
-    for i in range(0, len(outerTrack) - 1):
-        p1 = outerTrack[i]
-        p2 = outerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
-        p1 = innerTrack[i]
-        p2 = innerRail[i + 1]
-        ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
+    if opts["section_rail"]:
+        for i in range(0, len(outerTrack) - 1):
+            p1 = outerTrack[i]
+            p2 = outerRail[i + 1]
+            ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
+            p1 = innerTrack[i]
+            p2 = innerRail[i + 1]
+            ctx.drawLine(p1[0], p1[1], p2[0], p2[1], "grey42")
 
-    # ctx.drawPolygonPoints(points, "grey42", False)
-    ctx.drawPolygonPoints(outerTrack, "grey42", False)
-    ctx.drawPolygonPoints(innerTrack, "grey42", False)
-    ctx.drawPolygonPoints(outerRail, segment.color, False)
-    ctx.drawPolygonPoints(innerRail, segment.color, False)
-    ctx.drawPolygonPoints(outerBorder, segment.color, False)
-    ctx.drawPolygonPoints(innerBorder, segment.color, False)
+    if opts["line"]:
+        ctx.drawPolygonPoints(points, "grey42", False)
+    if opts["track"]:
+        ctx.drawPolygonPoints(outerTrack, "grey42", False)
+        ctx.drawPolygonPoints(innerTrack, "grey42", False)
+    if opts["rail"]:
+        ctx.drawPolygonPoints(outerRail, segment.color, False)
+        ctx.drawPolygonPoints(innerRail, segment.color, False)
+    if opts["border"]:
+        ctx.state.strokeWidth = 4
+        ctx.drawPolygonPoints(outerBorder, segment.color, False)
+        ctx.drawPolygonPoints(innerBorder, segment.color, False)
 
     ctx.restore()
 
@@ -218,6 +238,9 @@ def renderShip(ctx, entity):
             p2 = Vector.copy(entity.targetPoint.point)
             ctx.drawPolygon(p2.x, p2.y, 0.25, 12, "cyan")
             ctx.drawLine(p1.x, p1.y, p2.x, p2.y, "cyan")
+
+    # if entity.last_valid_point != None:
+    # ctx.drawLine(entity.pos.x, entity.pos.y, entity.last_valid_point.point.x, entity.last_valid_point.point.y, "cyan")
 
     ctx.restore()
 

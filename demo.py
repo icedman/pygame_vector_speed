@@ -148,6 +148,9 @@ class FrameGame(Frame):
 class FrameGame2(FrameGame):
     def onEnter(self):
         FrameGame.onEnter(self)
+        self.game.countDown = 1000
+        for i in range(0, 1000, 15):
+            self.game.update(i)
         self.text = "Combine all these and now we\nhave an endless random race track"
         self.textOpts["align"] = "bottom"
 
@@ -303,6 +306,11 @@ class FrameLines(FrameTrack):
 class FrameLinesExpand(FrameLines):
     def prepSegment(self):
         FrameLines.prepSegment(self)
+        print(Floor(self.ticks / 1000))
+        if Floor(self.ticks / 1000) % 4 == 0:
+            self.track.ssgments = []
+            self.track.addSector([TrackSegment.randomArcSegment()])
+            self.track.segments[0].baseAngle = Rand(0, 360)
         self.track.segments[0].length = 12
         self.track.segments[0].trackWidth = 2
         self.track.compute()
@@ -340,23 +348,23 @@ class FrameArcs(FrameTrack):
         self.segments = track.segments
 
 
-class FrameArcsExpand(FrameArcs):
-    def prepSegment(self):
-        FrameArcs.prepSegment(self)
-        self.text = ""
-        self.track.segments[0].length = 8
-        self.track.segments[0].trackWidth = 2
-        self.track.compute()
-        if self.ticks > 3000:
-            self.opts["track"] = True
-        if self.ticks > 6000:
-            self.opts["rail"] = True
-        if self.ticks > 90000:
-            self.opts["border"] = True
-        if self.ticks > 12000:
-            self.opts["section_track"] = True
-            self.opts["section_rail"] = True
-            self.opts["line"] = False
+# class FrameArcsExpand(FrameArcs):
+#     def prepSegment(self):
+#         FrameArcs.prepSegment(self)
+#         self.text = ""
+#         self.track.segments[0].length = 8
+#         self.track.segments[0].trackWidth = 2
+#         self.track.compute()
+#         if self.ticks > 3000:
+#             self.opts["track"] = True
+#         if self.ticks > 6000:
+#             self.opts["rail"] = True
+#         if self.ticks > 90000:
+#             self.opts["border"] = True
+#         if self.ticks > 12000:
+#             self.opts["section_track"] = True
+#             self.opts["section_rail"] = True
+#             self.opts["line"] = False
 
 
 class FrameLinesAndArcs(FrameTrack):
@@ -478,8 +486,8 @@ class DemoScene(Scene):
 
     def onEnter(self):
         _ = self
-        _.ticks = 0
-        _.frames = []
+        # _.ticks = 0
+        # _.frames = []
         _.frames.append(Frame(2000))
         _.frames.append(FrameGame(10000))
         _.frames.append(
@@ -488,13 +496,15 @@ class DemoScene(Scene):
         _.frames.append(FrameLines(6000))
         _.frames.append(FrameArcs(6000))
         _.frames.append(FrameLinesAndArcs(10000))
-        _.frames.append(FrameLinesExpand(22000))
-        _.frames.append(FrameArcsExpand(14000))
+
+        _.frames.append(FrameLinesExpand(30000))
+        # _.frames.append(FrameArcsExpand(14000))
         _.frames.append(
             Frame(5000, "Some track features are handmade", None, {"align": "center"})
         )
         _.frames.append(FrameFeatures(22000))
         _.frames.append(FrameGame2(24000))
+
         _.frames.append(Frame(5000, "Physics of the game", None, {"align": "center"}))
         _.frames.append(FrameGame3(32000))
         _.frames.append(Frame(5000, "AI Enemies", None, {"align": "center"}))

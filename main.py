@@ -46,6 +46,7 @@ gameState.trackedKeys = {
     pygame.K_p: "p",  # pause
     pygame.K_t: "t",  # toggle sound
     pygame.K_o: "o",  # demo
+    pygame.K_l: "l",  # demo
 }
 gameState.init()
 
@@ -363,6 +364,8 @@ while not gameState.done:
         toggleTint()
     if gameState.released["o"]:
         sceneService.enterScene(SceneType.demo)
+    if gameState.released["l"]:
+        gfx.basicDraw = not gfx.basicDraw
 
     sceneService.current.onUpdate(dt)
     sceneService.current.onRender(gfx)

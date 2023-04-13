@@ -26,6 +26,7 @@ class Context:
     _states = []
     surface: any = None
     cull: any = None
+    basicDraw = True
 
     def __init__(self, surface):
         self.surface = surface
@@ -124,11 +125,13 @@ class Context:
             if self.cull(v1, v2) == True:
                 return
 
-        self._drawLine(v1, v2, color)
+        if self.basicDraw:
+            pygame.draw.line(
+                self.surface, color, [v1.x, v1.y], [v2.x, v2.y], self.state.strokeWidth
+            )
+            return
 
-        # pygame.draw.line(
-        #     self.surface, color, [v1.x, v1.y], [v2.x, v2.y], self.state.strokeWidth
-        # )
+        self._drawLine(v1, v2, color)
 
     def drawRect(self, x, y, w, h, color=None):
         pygame.draw.rect(self.surface, color, [x, y, w, h], self.state.strokeWidth)
@@ -212,7 +215,6 @@ class Context:
 
     def drawText(self, x, y, text, size, color=None, align=0):
         text = text.upper()
-
         adv = 0
         extents = 0
 

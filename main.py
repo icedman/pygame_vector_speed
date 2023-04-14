@@ -8,7 +8,6 @@ from game import *
 from track import *
 from colors import tint, untint
 from sounds import *
-from data.ui import *
 from scene import *
 from demo import *
 
@@ -85,109 +84,6 @@ def toggleTint():
         tint(0, 255, 0, 0.6)
     else:
         untint()
-
-
-def render_hud():
-    player = gameState.player
-    track = gameState.track
-
-    if gameState.gameOver:
-        gfx.drawText(size[0] / 2, size[1] / 2, "Game Over", 2, "red")
-
-    # count down
-    if gameState.countDown > 0:
-        gfx.saveAttributes()
-        c = Floor(gameState.countDown / 1200)
-        cd = gameState.countDown / 1200
-        cs = "{}".format(c)
-        if cd - c < 0.30:
-            cs = ""
-        if gameState.lastCount != c and c <= 3:
-            soundService.play(Effects.countDown)
-            gameState.lastCount = c
-        if c <= 3:
-            if c == 0:
-                cs = "GO"
-                if gameState.countDown % 2 == 0:
-                    soundService.play(Effects.countDown)
-            gfx.state.strokeWidth = 6
-            pos = [size[0] / 2, size[1] / 2]
-            gfx.drawText(pos[0], pos[1], cs, 6, "yellow")
-        gfx.restore()
-        return
-
-    # race position
-    gfx.saveAttributes()
-
-    # race position
-    pos = [size[0] - 110, size[1] - 90]
-    gfx.state.strokeWidth = 4
-    gfx.drawText(pos[0], pos[1], "{}/".format(player.race_position), 2.5, "yellow", 1)
-    gfx.state.strokeWidth = 2
-    gfx.drawText(
-        pos[0] + 48, pos[1] + 10, "3".format(player.race_position), 2, "yellow", 1
-    )
-
-    # travel
-    pos = [40, size[1] - 100]
-    gfx.state.strokeWidth = 3
-    gfx.drawText(pos[0], pos[1], "{}".format(Floor(player.travel)), 2, "white", 1)
-
-    # time
-    pos = [40, size[1] - 60]
-    tick = gameState.tick
-    mins = Floor(tick / (1000 * 60))
-    tick -= mins * 1000 * 60
-    secs = Floor(tick / (1000))
-    tick -= secs * 1000
-    millis = Floor(tick)
-    gfx.state.strokeWidth = 2
-    gfx.drawText(
-        pos[0],
-        pos[1],
-        "{:02d}:{:02d}:{:03d}".format(mins, secs, millis),
-        1.5,
-        "yellow",
-        1,
-    )
-
-    # meters
-    l = len(meter)
-    gfx.save()
-    gfx.state.strokeWidth = 8
-    # speed
-    pos = [size[0] - 240, size[1] - 30]
-    gfx.translate(pos[0], pos[1])
-    gfx.drawPolygonPoints(meter, "white", False)
-    sp = gameState.player.speed / gameState.player.max_speed
-    mm = []
-    for i in range(0, Floor(l * sp)):
-        mm.append(meter[i])
-    gfx.drawPolygonPoints(mm, "cyan", False)
-    # shield
-    pos = [10, 20]
-    gfx.translate(pos[0], pos[1])
-    gfx.drawPolygonPoints(meter, "white", False)
-    sp = gameState.player.shield / gameState.player.max_shield
-    color = "green"
-    if sp < 0.3:
-        color = "red"
-        if gameState.player.shield <= 0:
-            print_log("ship disabled")
-        else:
-            print_log("critical")
-    mm = []
-    for i in range(0, Floor(l * sp)):
-        mm.append(meter[i])
-    gfx.drawPolygonPoints(mm, color, False)
-    gfx.restore()
-
-    if player.boost_t > 0:
-        print_log("boost")
-    if player.damage_t > 0:
-        print_log("damage")
-
-    gfx.restore()
 
 
 class GameScene(Scene):
@@ -273,7 +169,8 @@ class GameScene(Scene):
         gfx.restore()
 
         if self.showHud:
-            render_hud()
+            render_hud(gfx, gameState, print_log)
+            render_minimap(gfx, gameState, print_log)
 
 
 class MenuScene(GameScene):

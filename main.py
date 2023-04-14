@@ -3,14 +3,13 @@ import sys
 
 from maths import *
 from draw import Context
-from renderer import *
 from game import *
 from track import *
 from colors import tint, untint
 from sounds import *
 from scene import *
 from demo import *
-
+from renderer import *
 
 pygame.init()
 

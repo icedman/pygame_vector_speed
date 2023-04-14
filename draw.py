@@ -68,23 +68,6 @@ class Context:
         self.surface.fill(color)
 
     def _drawLine(self, v1, v2, color=None):
-        if isinstance(color, str):
-            clrs = color.title()
-            clrs1 = clrs + "1"
-            clrs2 = clrs + "2"
-            clrs3 = clrs + "3"
-            if clrs in colors:
-                color = colors[clrs]
-            elif clrs3 in colors:
-                color = colors[clrs3]
-            elif clrs2 in colors:
-                color = colors[clrs2]
-            elif clrs1 in colors:
-                color = colors[clrs1]
-            else:
-                print(color)
-                color = [255, 255, 255]
-
         w = self.state.strokeWidth
         if w == 1:
             pygame.gfxdraw.line(
@@ -115,6 +98,23 @@ class Context:
 
         if self.state.forcedColor != None:
             color = self.state.forcedColor
+
+        if isinstance(color, str):
+            clrs = color.title()
+            clrs1 = clrs + "1"
+            clrs2 = clrs + "2"
+            clrs3 = clrs + "3"
+            if clrs in colors:
+                color = colors[clrs]
+            elif clrs3 in colors:
+                color = colors[clrs3]
+            elif clrs2 in colors:
+                color = colors[clrs2]
+            elif clrs1 in colors:
+                color = colors[clrs1]
+            else:
+                print(color)
+                color = [255, 255, 255]
 
         m = self.state.matrix
         v1 = Vector(x, y).transform(m)

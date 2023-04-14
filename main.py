@@ -47,6 +47,7 @@ gameState.trackedKeys = {
     pygame.K_t: "t",  # toggle sound
     pygame.K_o: "o",  # demo
     pygame.K_l: "l",  # demo
+    pygame.K_i: "i",  # demo
 }
 gameState.init()
 
@@ -338,6 +339,7 @@ for arg in sys.argv:
     if arg.startswith("-"):
         gameState.pressed[arg[1:]] = True
 
+rendered = 0
 last_tick = 0
 while not gameState.done:
     tick = pygame.time.get_ticks()
@@ -366,6 +368,8 @@ while not gameState.done:
         sceneService.enterScene(SceneType.demo)
     if gameState.released["l"]:
         gfx.basicDraw = not gfx.basicDraw
+    if gameState.released["i"]:
+        gameState.showFps = not gameState.showFps
 
     sceneService.current.onUpdate(dt)
     sceneService.current.onRender(gfx)
@@ -375,5 +379,11 @@ while not gameState.done:
         gfx.drawText(25, 50 + row * 24, l, 1.5, "cyan", 1)
         row += 1
     log = []
+
+    if gameState.showFps:
+        rendered += 1
+        if rendered > 0:
+            fps = "{}fps".format(Floor(rendered * 1000 / last_tick))
+            gfx.drawText(size[0] - 100, 40, fps, 2, "red")
 
     pygame.display.flip()
